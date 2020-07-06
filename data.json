@@ -1,0 +1,18 @@
+{
+  "data": [
+    {
+      "id": "713733696142",
+      "price": 1.99,
+      "name": "Apple",
+      "image": "https://oppy.com/sites/default/files/styles/large/public/Pink-Lady_hero.png?itok=S69rflgO",
+      "quantity": 1
+    },
+    {
+      "id": "025293001220",
+      "price": 3.99,
+      "name": "Silk Coconut Milk",
+      "image": "https://e22d0640933e3c7f8c86-34aee0c49088be50e3ac6555f6c963fb.ssl.cf2.rackcdn.com/0025293002280_CL_default_default_large.jpeg",
+      "quantity": 1
+    }
+  ]
+}
