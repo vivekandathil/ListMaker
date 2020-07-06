@@ -11,6 +11,10 @@ import {
 import Swiper from "react-native-deck-swiper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Transitioning, Transition } from "react-native-reanimated";
+import Dialog, { DialogContent } from "react-native-popup-dialog";
+import NumericInput from "react-native-numeric-input";
+import * as Haptics from "expo-haptics";
+import { Colors } from "react-native/Libraries/NewAppScreen";
 
 const data = [
   {
@@ -28,7 +32,10 @@ const data = [
       "https://e22d0640933e3c7f8c86-34aee0c49088be50e3ac6555f6c963fb.ssl.cf2.rackcdn.com/0025293002280_CL_default_default_large.jpeg",
   },
 ];
+
 console.disableYellowBox = true;
+
+// Itsme the user swiped right on
 const selectedItems = [];
 
 const colors = {
@@ -78,18 +85,50 @@ const transitionRef = React.createRef();
 
 export default function App() {
   const [index, setIndex] = React.useState(0);
+  const [addPopupVisible, setVisible] = React.useState(false);
 
   const onSwiped = () => {
     transitionRef.current.animateNextTransition();
     setIndex((index + 1) % data.length);
   };
   const onSwipedRight = () => {
+    selectedItems.push(data[index]);
+    console.log(data[index]);
+  };
+  const onTapCard = () => {
+    setVisible(true);
+    Haptics.selectionAsync();
     console.log(data[index]);
   };
 
   return (
     <View style={styles.container}>
       <StatusBar hidden />
+      <Dialog
+        visible={addPopupVisible}
+        onTouchOutside={() => {
+          setVisible(false);
+        }}
+      >
+        <DialogContent>
+          <NumericInput
+            onChange={(value) => console.log(value)}
+            totalWidth={240}
+            totalHeight={50}
+            iconSize={25}
+            step={1}
+            valueType="real"
+            rounded
+            textColor="#000"
+            iconStyle={{ color: "white" }}
+            rightButtonBackgroundColor={colors.green}
+            leftButtonBackgroundColor={colors.red}
+            maxValue={10}
+            minValue={1}
+            style={{ paddingTop: 40 }}
+          />
+        </DialogContent>
+      </Dialog>
       <View style={styles.swiperContainer}>
         <Swiper
           ref={swiperRef}
@@ -98,6 +137,7 @@ export default function App() {
           renderCard={(card) => <Card card={card} />}
           onSwiped={onSwiped}
           onSwipedRight={onSwipedRight}
+          onTapCard={onTapCard}
           stackSize={2}
           stackScale={10}
           stackSeparation={14}
@@ -220,7 +260,7 @@ const styles = StyleSheet.create({
   },
   text: { fontFamily: "Avenir-Light", fontSize: 22 },
   heading: { fontSize: 24, marginBottom: 10, color: colors.gray },
-  price: { color: colors.blue, fontSize: 32, fontWeight: "500" },
+  price: { color: colors.green, fontSize: 32, fontWeight: "500" },
   cardDetails: {
     alignItems: "center",
   },

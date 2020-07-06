@@ -10,12 +10,16 @@
   "dependencies": {
     "@expo/vector-icons": "^10.2.0",
     "expo": "~38.0.8",
+    "expo-haptics": "~8.2.1",
     "expo-status-bar": "^1.0.2",
     "react": "~16.11.0",
     "react-dom": "~16.11.0",
     "react-native": "https://github.com/expo/react-native/archive/sdk-38.0.1.tar.gz",
     "react-native-deck-swiper": "^1.6.7",
+    "react-native-numeric-input": "^1.8.3",
+    "react-native-popup-dialog": "^0.18.3",
     "react-native-reanimated": "^1.9.0",
+    "react-native-vector-icons": "^7.0.0",
     "react-native-view-overflow": "^0.0.5",
     "react-native-web": "~0.11.7"
   },
