@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   YellowBox,
   Button,
+  FlatList,
 } from "react-native";
 import Swiper from "react-native-deck-swiper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -16,9 +17,8 @@ import Dialog, { DialogContent } from "react-native-popup-dialog";
 import NumericInput from "react-native-numeric-input";
 import * as Haptics from "expo-haptics";
 import { Colors } from "react-native/Libraries/NewAppScreen";
-import { SearchBar, Overlay } from "react-native-elements";
-import { createDrawerNavigator } from "@react-navigation/drawer";
-import { NavigationContainer } from "@react-navigation/native";
+import { SearchBar, Overlay, ListItem } from "react-native-elements";
+import TouchableScale from "react-native-touchable-scale";
 
 const data = [
   {
@@ -96,7 +96,6 @@ const colors = {
   black: "#000000",
   green: "#00ff7f",
 };
-
 const duration = 200;
 const transition = (
   <Transition.Sequence>
@@ -130,19 +129,36 @@ const CardDetails = ({ index }) => (
   </View>
 );
 
+const keyExtractor = (item, index) => index.toString();
+
+const renderItem = ({ item }) => (
+  <ListItem
+    Component={TouchableScale}
+    title={item.name}
+    leftAvatar={{
+      source: item.image && { uri: item.image },
+      name: item.name[0],
+    }}
+    bottomDivider
+    chevron
+  />
+);
+
 const swiperRef = React.createRef();
 const transitionRef = React.createRef();
-const Drawer = createDrawerNavigator();
 
 export default function App() {
   const [index, setIndex] = React.useState(0); // Card index
+  const [groceryList, setListData] = React.useState(data); // Card index
   const [addPopupVisible, setVisible] = React.useState(false); // Incrementor popup
   const [endOfList, setEndPopup] = React.useState(false); // End of list popup
   const [search, setSearch] = React.useState(""); // Search
   const [searchResultsVisible, setOverlayVisible] = React.useState(false); // Search
+  const [searchPopupVisible, setSearchVisible] = React.useState(false); // Incrementor popup
 
   const filteredData = data.filter((item) => {
-    return item.name.includes(search);
+    let lowerCase = search.toLowerCase();
+    return item.name.toLowerCase().includes(lowerCase);
   });
 
   const onSwiped = () => {
@@ -175,25 +191,23 @@ export default function App() {
   return (
     <View style={styles.container}>
       <StatusBar hidden />
-      <NavigationContainer>
-        <Drawer.Navigator>
-          <Text>hello</Text>
-        </Drawer.Navigator>
-      </NavigationContainer>
-      <SearchBar
-        placeholder="Search for a Product..."
-        onChangeText={updateSearch}
-        value={search}
-        lightTheme
-        containerStyle={{ backgroundColor: "white" }}
-        inputContainerStyle={{ backgroundColor: "#f2f2f2" }}
-        onClear={clearOverlay}
+      <MaterialCommunityIcons.Button
+        name="magnify"
+        size={44}
+        backgroundColor="transparent"
+        underlayColor="transparent"
+        activeOpacity={0.3}
+        color={colors.green}
+        onPress={() => {
+          setSearchVisible(true);
+        }}
       />
       <Dialog
         visible={addPopupVisible}
         onTouchOutside={() => {
           setVisible(false);
         }}
+        style={{ width: 30 }}
       >
         <DialogContent style={styles.popup}>
           <View style={{ marginTop: 20, marginBottom: 20 }}>
@@ -229,12 +243,45 @@ export default function App() {
           />
         </DialogContent>
       </Dialog>
-
+      <Dialog
+        visible={searchPopupVisible}
+        onTouchOutside={() => {
+          setSearchVisible(false);
+        }}
+      >
+        <DialogContent style={styles.popup}>
+          <View style={{ width: 300 }}>
+            <SearchBar
+              placeholder="Search for a Product..."
+              onChangeText={updateSearch}
+              value={search}
+              lightTheme
+              containerStyle={{ backgroundColor: "white" }}
+              inputContainerStyle={{ backgroundColor: "#f2f2f2" }}
+              onClear={clearOverlay}
+            />
+            <FlatList
+              keyExtractor={keyExtractor}
+              data={data}
+              renderItem={renderItem}
+            />
+            <Button
+              title="Done"
+              onPress={() => {
+                setSearchVisible(false);
+              }}
+              color={colors.green}
+            />
+          </View>
+        </DialogContent>
+      </Dialog>
       <View style={styles.topContainer}></View>
       <View style={styles.swiperContainer}>
-        <Text style={styles.outof}>
-          {index + 1}/{data.length}
-        </Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
+          <Text style={styles.outof}>
+            {index + 1}/{data.length}
+          </Text>
+        </View>
         <Swiper
           ref={swiperRef}
           cards={data}
@@ -384,5 +431,6 @@ const styles = StyleSheet.create({
   popup: {
     alignItems: "center",
     justifyContent: "center",
+    width: "100%",
   },
 });
