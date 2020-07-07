@@ -17,7 +17,7 @@ import Dialog, { DialogContent } from "react-native-popup-dialog";
 import NumericInput from "react-native-numeric-input";
 import * as Haptics from "expo-haptics";
 import { Colors } from "react-native/Libraries/NewAppScreen";
-import { SearchBar, Overlay, ListItem } from "react-native-elements";
+import { SearchBar, Overlay, ListItem, Card } from "react-native-elements";
 import TouchableScale from "react-native-touchable-scale";
 
 const data = [
@@ -116,7 +116,7 @@ const transition = (
   </Transition.Sequence>
 );
 
-const Card = ({ card }) => (
+const GroceryCard = ({ card }) => (
   <View style={styles.card}>
     <Image source={{ uri: card.image }} style={styles.cardImage} />
   </View>
@@ -131,19 +131,6 @@ const CardDetails = ({ index }) => (
 
 const keyExtractor = (item, index) => index.toString();
 
-const renderItem = ({ item }) => (
-  <ListItem
-    Component={TouchableScale}
-    title={item.name}
-    leftAvatar={{
-      source: item.image && { uri: item.image },
-      name: item.name[0],
-    }}
-    bottomDivider
-    chevron
-  />
-);
-
 const swiperRef = React.createRef();
 const transitionRef = React.createRef();
 
@@ -151,15 +138,57 @@ export default function App() {
   const [index, setIndex] = React.useState(0); // Card index
   const [groceryList, setListData] = React.useState(data); // Card index
   const [addPopupVisible, setVisible] = React.useState(false); // Incrementor popup
+  // Product Profile popup in quick-add menu
+  const [profileData, setProfileData] = React.useState(data[index]); // Incrementor popup
+  const [profileVisible, setProfileVisible] = React.useState(false); // Profile popup
+  const [quantity, setQuantity] = React.useState(1);
+  // End of the list reached
   const [endOfList, setEndPopup] = React.useState(false); // End of list popup
+  // Search data
   const [search, setSearch] = React.useState(""); // Search
   const [searchResultsVisible, setOverlayVisible] = React.useState(false); // Search
   const [searchPopupVisible, setSearchVisible] = React.useState(false); // Incrementor popup
 
   const filteredData = data.filter((item) => {
-    let lowerCase = search.toLowerCase();
-    return item.name.toLowerCase().includes(lowerCase);
+    return item.name.toLowerCase().includes(search.toString().toLowerCase());
   });
+
+  const renderItem = ({ item }) => (
+    <ListItem
+      Component={TouchableScale}
+      title={item.name}
+      leftAvatar={{
+        source: item.image && { uri: item.image },
+        name: item.name[0],
+      }}
+      bottomDivider
+      chevron
+      onPress={() => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setProfileData(item);
+        console.log(item.name);
+        setProfileVisible(true);
+      }}
+      rightElement={
+        <NumericInput
+          onChange={(value) => setQuantity(value)}
+          totalWidth={80}
+          totalHeight={40}
+          iconSize={25}
+          step={1}
+          valueType="real"
+          rounded
+          textColor="#000"
+          iconStyle={{ color: "white" }}
+          rightButtonBackgroundColor={colors.green}
+          leftButtonBackgroundColor={colors.green}
+          maxValue={10}
+          minValue={1}
+          initValue={1}
+        />
+      }
+    />
+  );
 
   const onSwiped = () => {
     transitionRef.current.animateNextTransition();
@@ -169,6 +198,11 @@ export default function App() {
   };
   const onSwipedRight = () => {
     selectedItems.push(data[index]);
+    console.log(selectedItems);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
+  const onQuickAdded = () => {
+    selectedItems.push(profileData);
     console.log(selectedItems);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
@@ -260,6 +294,40 @@ export default function App() {
               inputContainerStyle={{ backgroundColor: "#f2f2f2" }}
               onClear={clearOverlay}
             />
+            <Dialog
+              visible={profileVisible}
+              onTouchOutside={() => {
+                setProfileVisible(false);
+              }}
+            >
+              <DialogContent style={styles.popup}>
+                <Card
+                  title={profileData.name}
+                  image={{ uri: profileData.image }}
+                  imageStyle={{ height: 300, width: 300 }}
+                >
+                  <Text
+                    style={{ fontFamily: "Avenir-Light", marginBottom: 10 }}
+                  >
+                    {profileData.name}{" "}
+                    {profileData.name.endsWith("s") ? "are" : "is"} in the{" "}
+                    {profileData.category} category and cost
+                    {profileData.name.endsWith("s") ? "" : "s"} $
+                    {profileData.price} per unit.
+                  </Text>
+                </Card>
+                <Button
+                  color={colors.green}
+                  title={
+                    "Add " + quantity + " " + profileData.name + " to list"
+                  }
+                  onPress={() => {
+                    onQuickAdded();
+                    setProfileVisible(false);
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
             <FlatList
               keyExtractor={keyExtractor}
               data={data}
@@ -286,7 +354,7 @@ export default function App() {
           ref={swiperRef}
           cards={data}
           cardIndex={index}
-          renderCard={(card) => <Card card={card} />}
+          renderCard={(card) => <GroceryCard card={card} />}
           onSwiped={onSwiped}
           onSwipedRight={onSwipedRight}
           onTapCard={onTapCard}
@@ -375,7 +443,7 @@ const styles = StyleSheet.create({
     flex: 0.58,
   },
   bottomContainer: {
-    flex: 0.45,
+    flex: 0.35,
     justifyContent: "space-evenly",
   },
   topContainer: {
