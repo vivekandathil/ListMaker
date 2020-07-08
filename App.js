@@ -9,6 +9,8 @@ import {
   YellowBox,
   Button,
   FlatList,
+  ScrollView,
+  TouchableOpacity,
 } from "react-native";
 import Swiper from "react-native-deck-swiper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -31,6 +33,15 @@ import {
   Badge,
 } from "react-native-elements";
 import TouchableScale from "react-native-touchable-scale";
+import {
+  Table,
+  TableWrapper,
+  Row,
+  Rows,
+  Col,
+  Cols,
+  Cell,
+} from "react-native-table-component";
 
 const data = [
   {
@@ -40,7 +51,7 @@ const data = [
     information: "Pink Lady or Honeycrisp",
     image:
       "https://oppy.com/sites/default/files/styles/large/public/Pink-Lady_hero.png?itok=S69rflgO",
-    category: "Fruit-Vegetable",
+    category: "Fruit-Veg",
     quantity: 1,
   },
   {
@@ -50,7 +61,7 @@ const data = [
     information: "",
     image:
       "http://2.bp.blogspot.com/-pU8BDUCR3Sg/UDZQmt4IcdI/AAAAAAAAACA/T5rq7xIKLek/s1600/Banana.png",
-    category: "Fruit-Vegetable",
+    category: "Fruit-Veg",
     quantity: 1,
   },
   {
@@ -60,7 +71,7 @@ const data = [
     information: "",
     image:
       "https://www.driscolls.pt/assets/styles/block_product_display/public/content/block/image/isa_2754_frambozen-125gr-zijkant-lowres.png?itok=W5LBTWau",
-    category: "Fruit-Vegetable",
+    category: "Fruit-Veg",
     quantity: 1,
   },
   {
@@ -70,7 +81,7 @@ const data = [
     information: "",
     image:
       "https://0bb8856ba8259ec33e3d-a40599a114f3a4c6d0979c3ffe0b2bf5.ssl.cf2.rackcdn.com/0715756300020_CL_hyvee_default_large.png",
-    category: "Fruit-Vegetable",
+    category: "Fruit-Veg",
     quantity: 1,
   },
   {
@@ -152,13 +163,16 @@ const CardDetails = ({ index }) => (
 );
 
 const keyExtractor = (item, index) => index.toString();
+const productKeys = ["Category", "Name", "Price", "QTY"];
 
 const swiperRef = React.createRef();
 const transitionRef = React.createRef();
 
+const tableRows = [];
+
 export default function App() {
   const [index, setIndex] = React.useState(0); // Card index
-  const [groceryList, setListData] = React.useState(data); // Card index
+  const [groceryList, setListData] = React.useState([]); // Card index
   const [addPopupVisible, setVisible] = React.useState(false); // Incrementor popup
   // Product Profile popup in quick-add menu
   const [profileData, setProfileData] = React.useState(data[index]); // Incrementor popup
@@ -169,6 +183,8 @@ export default function App() {
   // Search data
   const [search, setSearch] = React.useState(""); // Search
   const [searchPopupVisible, setSearchVisible] = React.useState(false); // Incrementor popup
+  // Table view
+  const [tablePopupVisible, setTableVisible] = React.useState(false); // Incrementor popup
 
   const filteredData = data.filter((item) => {
     return item.name.toLowerCase().includes(search.toString().toLowerCase());
@@ -231,11 +247,25 @@ export default function App() {
   };
   const onSwipedRight = () => {
     selectedItems.push(data[index]);
+    tableRows.push([
+      data[index].category,
+      data[index].name,
+      data[index].price,
+      data[index].quantity,
+    ]);
+    setListData(tableRows);
     console.log(selectedItems);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
   const onQuickAdded = () => {
     selectedItems.push(profileData);
+    tableRows.push([
+      profileData.category,
+      profileData.name,
+      profileData.price,
+      profileData.quantity,
+    ]);
+    setListData(tableRows);
     console.log(selectedItems);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
@@ -250,21 +280,205 @@ export default function App() {
   const clearOverlay = (search) => {
     setSearch("");
   };
+  const removeButton = (data, index) => (
+    <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
+      <View style={{ justifyContent: "center" }}>
+        <Text
+          style={{
+            fontFamily: "Avenir-Light",
+            textAlign: "center",
+            fontWeight: "bold",
+          }}
+        >
+          {data}
+        </Text>
+      </View>
+      <MaterialCommunityIcons.Button
+        name="cart-remove"
+        size={24}
+        backgroundColor="transparent"
+        underlayColor="transparent"
+        activeOpacity={0.3}
+        color={colors.red}
+        onPress={() => {
+          alert(data);
+        }}
+      />
+    </View>
+  );
 
   return (
     <View style={styles.container}>
       <StatusBar hidden />
-      <MaterialCommunityIcons.Button
-        name="magnify"
-        size={44}
-        backgroundColor="transparent"
-        underlayColor="transparent"
-        activeOpacity={0.3}
-        color={colors.green}
-        onPress={() => {
-          setSearchVisible(true);
+      <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
+        <MaterialCommunityIcons.Button
+          name="magnify"
+          size={44}
+          backgroundColor="transparent"
+          underlayColor="transparent"
+          activeOpacity={0.3}
+          color={colors.red}
+          onPress={() => {
+            setSearchVisible(true);
+          }}
+        />
+        <View>
+          <MaterialCommunityIcons.Button
+            name="format-list-checkbox"
+            size={44}
+            backgroundColor="transparent"
+            underlayColor="transparent"
+            activeOpacity={0.3}
+            color={colors.green}
+            onPress={() => {
+              setTableVisible(true);
+            }}
+          />
+          <Badge
+            status="error"
+            containerStyle={{ position: "absolute", top: -0.5, right: -0.5 }}
+            value={selectedItems.length}
+          />
+        </View>
+      </View>
+      <Dialog
+        visible={tablePopupVisible}
+        onTouchOutside={() => {
+          setTableVisible(false);
         }}
-      />
+        dialogTitle={<DialogTitle title="Grocery List" />}
+        dialogAnimation={
+          new SlideAnimation({
+            slideFrom: "bottom",
+          })
+        }
+        height={597}
+        width={350}
+      >
+        <DialogContent>
+          <View>
+            <View
+              style={{
+                flexDirection: "row",
+                borderBottomWidth: 2,
+                borderBottomColor: colors.red,
+              }}
+            >
+              <MaterialCommunityIcons.Button
+                name="keyboard-return"
+                size={44}
+                backgroundColor="transparent"
+                underlayColor="transparent"
+                activeOpacity={0.3}
+                color={colors.red}
+                style={{ justifyContent: "flex-start" }}
+                onPress={() => {
+                  setTableVisible(false);
+                }}
+              />
+              <Text
+                style={{
+                  fontFamily: "Avenir-Light",
+                  fontWeight: "bold",
+                  textAlign: "center",
+                  marginTop: 20,
+                  marginLeft: 20,
+                  fontSize: 20,
+                }}
+              >
+                Export Options
+              </Text>
+            </View>
+
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-evenly" }}
+            >
+              <MaterialCommunityIcons.Button
+                name="file-pdf-box"
+                size={44}
+                backgroundColor="transparent"
+                underlayColor="transparent"
+                activeOpacity={0.3}
+                color={"red"}
+                onPress={() => {
+                  alert("exported to PDF (not really)");
+                }}
+              />
+              <MaterialCommunityIcons.Button
+                name="file-excel"
+                size={44}
+                backgroundColor="transparent"
+                underlayColor="transparent"
+                activeOpacity={0.3}
+                color={"green"}
+                onPress={() => {
+                  alert("exported to Excel (not really)");
+                }}
+              />
+              <MaterialCommunityIcons.Button
+                name="whatsapp"
+                size={44}
+                backgroundColor="transparent"
+                underlayColor="transparent"
+                activeOpacity={0.3}
+                color={"lawngreen"}
+                onPress={() => {
+                  alert("exported to WhatsApp (not really)");
+                }}
+              />
+              <MaterialCommunityIcons.Button
+                name="email-plus-outline"
+                size={44}
+                backgroundColor="transparent"
+                underlayColor="transparent"
+                activeOpacity={0.3}
+                color={"deepskyblue"}
+                onPress={() => {
+                  alert("exported to E-Mail (not really)");
+                }}
+              />
+            </View>
+            <ScrollView alwaysBounceVertical={false}>
+              <Table borderStyle={{ borderWidth: 1, borderColor: "#C1C0B9" }}>
+                <Row
+                  data={productKeys}
+                  style={{ height: 40, backgroundColor: colors.green }}
+                  textStyle={{
+                    fontFamily: "Avenir-Light",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    margin: 9,
+                  }}
+                />
+                {groceryList.map((rowData, index) => (
+                  <TableWrapper
+                    key={index}
+                    style={{
+                      flexDirection: "row",
+                      backgroundColor: colors.white,
+                    }}
+                  >
+                    {rowData.map((cellData, cellIndex) => (
+                      <Cell
+                        key={cellIndex}
+                        data={
+                          cellIndex === 3
+                            ? removeButton(cellData, index)
+                            : cellData
+                        }
+                        textStyle={{
+                          fontFamily: "Avenir-Light",
+                          textAlign: "center",
+                        }}
+                      />
+                    ))}
+                  </TableWrapper>
+                ))}
+              </Table>
+            </ScrollView>
+          </View>
+        </DialogContent>
+      </Dialog>
       <Dialog
         visible={addPopupVisible}
         onTouchOutside={() => {
