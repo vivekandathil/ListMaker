@@ -42,69 +42,9 @@ import {
   Cols,
   Cell,
 } from "react-native-table-component";
+import productJSON from "./data.json";
 
-const data = [
-  {
-    id: "713733696142",
-    price: 1.99,
-    name: "Apple",
-    information: "Pink Lady or Honeycrisp",
-    image:
-      "https://oppy.com/sites/default/files/styles/large/public/Pink-Lady_hero.png?itok=S69rflgO",
-    category: "Fruit-Veg",
-    quantity: 1,
-  },
-  {
-    id: "021248000072",
-    price: 1.45,
-    name: "Banana",
-    information: "",
-    image:
-      "http://2.bp.blogspot.com/-pU8BDUCR3Sg/UDZQmt4IcdI/AAAAAAAAACA/T5rq7xIKLek/s1600/Banana.png",
-    category: "Fruit-Veg",
-    quantity: 1,
-  },
-  {
-    id: "715756100040",
-    price: 3.99,
-    name: "Raspberries",
-    information: "",
-    image:
-      "https://www.driscolls.pt/assets/styles/block_product_display/public/content/block/image/isa_2754_frambozen-125gr-zijkant-lowres.png?itok=W5LBTWau",
-    category: "Fruit-Veg",
-    quantity: 1,
-  },
-  {
-    id: "715756300129",
-    price: 3.99,
-    name: "Blueberries",
-    information: "",
-    image:
-      "https://0bb8856ba8259ec33e3d-a40599a114f3a4c6d0979c3ffe0b2bf5.ssl.cf2.rackcdn.com/0715756300020_CL_hyvee_default_large.png",
-    category: "Fruit-Veg",
-    quantity: 1,
-  },
-  {
-    id: "063100231545",
-    price: 3.69,
-    name: "Canned Chicken",
-    information: "Maple Leaf Flakes of Chicken",
-    image:
-      "https://az836796.vo.msecnd.net/media/image/product/en/medium/0006310023154.jpg",
-    category: "Meat",
-    quantity: 1,
-  },
-  {
-    id: "025293001220",
-    price: 3.99,
-    name: "Silk Coconut Milk",
-    information: "In the Allergy-Free section",
-    image:
-      "https://e22d0640933e3c7f8c86-34aee0c49088be50e3ac6555f6c963fb.ssl.cf2.rackcdn.com/0025293002280_CL_default_default_large.jpeg",
-    category: "Dairy-Egg",
-    quantity: 1,
-  },
-];
+const data = productJSON.data;
 
 console.disableYellowBox = true;
 
@@ -310,7 +250,7 @@ export default function App() {
   return (
     <View style={styles.container}>
       <StatusBar hidden />
-      <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
+      <View style={{ flexDirection: "row" }}>
         <MaterialCommunityIcons.Button
           name="magnify"
           size={44}
@@ -321,8 +261,20 @@ export default function App() {
           onPress={() => {
             setSearchVisible(true);
           }}
+          style={{
+            justifyContent: "flex-start",
+            marginTop: 10,
+            marginLeft: 10,
+          }}
         />
-        <View>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "flex-end",
+            marginTop: 10,
+            marginRight: 10,
+          }}
+        >
           <MaterialCommunityIcons.Button
             name="format-list-checkbox"
             size={44}
