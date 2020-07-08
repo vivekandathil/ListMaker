@@ -13,11 +13,23 @@ import {
 import Swiper from "react-native-deck-swiper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Transitioning, Transition } from "react-native-reanimated";
-import Dialog, { DialogContent } from "react-native-popup-dialog";
+import Dialog, {
+  DialogContent,
+  DialogTitle,
+  SlideAnimation,
+  DialogFooter,
+  DialogButton,
+} from "react-native-popup-dialog";
 import NumericInput from "react-native-numeric-input";
 import * as Haptics from "expo-haptics";
 import { Colors } from "react-native/Libraries/NewAppScreen";
-import { SearchBar, Overlay, ListItem, Card } from "react-native-elements";
+import {
+  SearchBar,
+  Overlay,
+  ListItem,
+  Card,
+  Badge,
+} from "react-native-elements";
 import TouchableScale from "react-native-touchable-scale";
 
 const data = [
@@ -119,6 +131,16 @@ const transition = (
 const GroceryCard = ({ card }) => (
   <View style={styles.card}>
     <Image source={{ uri: card.image }} style={styles.cardImage} />
+    <Badge
+      status="success"
+      containerStyle={{ position: "absolute", top: -5, right: -5 }}
+      badgeStyle={
+        selectedItems.includes(card)
+          ? { backgroundColor: "lawngreen" }
+          : { backgroundColor: "transparent" }
+      }
+      value={selectedItems.includes(card) ? "Added" : ""}
+    />
   </View>
 );
 
@@ -146,7 +168,6 @@ export default function App() {
   const [endOfList, setEndPopup] = React.useState(false); // End of list popup
   // Search data
   const [search, setSearch] = React.useState(""); // Search
-  const [searchResultsVisible, setOverlayVisible] = React.useState(false); // Search
   const [searchPopupVisible, setSearchVisible] = React.useState(false); // Incrementor popup
 
   const filteredData = data.filter((item) => {
@@ -170,22 +191,34 @@ export default function App() {
         setProfileVisible(true);
       }}
       rightElement={
-        <NumericInput
-          onChange={(value) => setQuantity(value)}
-          totalWidth={80}
-          totalHeight={40}
-          iconSize={25}
-          step={1}
-          valueType="real"
-          rounded
-          textColor="#000"
-          iconStyle={{ color: "white" }}
-          rightButtonBackgroundColor={colors.green}
-          leftButtonBackgroundColor={colors.green}
-          maxValue={10}
-          minValue={1}
-          initValue={1}
-        />
+        <View>
+          <NumericInput
+            onChange={(value) => setQuantity(value)}
+            totalWidth={80}
+            totalHeight={40}
+            iconSize={25}
+            step={1}
+            valueType="real"
+            rounded
+            textColor="#000"
+            iconStyle={{ color: "white" }}
+            rightButtonBackgroundColor={colors.green}
+            leftButtonBackgroundColor={colors.green}
+            maxValue={10}
+            minValue={1}
+            initValue={1}
+          />
+          <Badge
+            status="success"
+            containerStyle={{ position: "absolute", top: -5, right: -5 }}
+            badgeStyle={
+              selectedItems.includes(item)
+                ? { backgroundColor: "lawngreen" }
+                : { backgroundColor: "transparent" }
+            }
+            value={selectedItems.includes(item) ? "Added" : ""}
+          />
+        </View>
       }
     />
   );
@@ -212,14 +245,10 @@ export default function App() {
     console.log(data[index]);
   };
   const updateSearch = (search) => {
-    //overlay visible
-    setOverlayVisible(true);
-    setSearch({ search });
+    setSearch(search);
   };
   const clearOverlay = (search) => {
-    //overlay invisible
-    console.log("trda");
-    setOverlayVisible(false);
+    setSearch("");
   };
 
   return (
@@ -281,7 +310,28 @@ export default function App() {
         visible={searchPopupVisible}
         onTouchOutside={() => {
           setSearchVisible(false);
+          setSearch("");
         }}
+        dialogTitle={<DialogTitle title="Quick-Add" />}
+        dialogAnimation={
+          new SlideAnimation({
+            slideFrom: "bottom",
+          })
+        }
+        footer={
+          <DialogFooter>
+            <DialogButton
+              text="Done"
+              onPress={() => {
+                setSearchVisible(false);
+                setSearch("");
+              }}
+              style={{ backgroundColor: colors.green }}
+              textStyle={{ color: colors.black }}
+            />
+          </DialogFooter>
+        }
+        height={597}
       >
         <DialogContent style={styles.popup}>
           <View style={{ width: 300 }}>
@@ -330,15 +380,8 @@ export default function App() {
             </Dialog>
             <FlatList
               keyExtractor={keyExtractor}
-              data={data}
+              data={filteredData}
               renderItem={renderItem}
-            />
-            <Button
-              title="Done"
-              onPress={() => {
-                setSearchVisible(false);
-              }}
-              color={colors.green}
             />
           </View>
         </DialogContent>
