@@ -17,6 +17,7 @@
  ## Dark Mode
   - The app can be switched between light and dark mode
   
+ # Installation
  View/Test the app here: https://expo.io/@/ListMaker
     
   (Product data is taken from various grocery stores in Ottawa)
