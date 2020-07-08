@@ -4,7 +4,7 @@
 ![](v2.gif) ![](listedit.jpeg) ![](darkmode.gif)
 
 # Simplified grocery list generator:
- - Grocery Products are arranged as cards which can be swiped left or right
+ - Grocery items are arranged as cards which can be swiped left or right
  - Swiping a card to the right adds the product to the list, swiping left discards it
     - Tap on the card to adjust the quantity before adding it to the list
 ## Quick-add Menu
