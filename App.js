@@ -44,13 +44,13 @@ import {
 } from "react-native-table-component";
 import productJSON from "./data.json";
 
+// Sample data from Loblaws Kanata (id=UPC code)
 const data = productJSON.data;
-
+// Disale Expo warnings in the app
 console.disableYellowBox = true;
-
-// Itsme the user swiped right on
+// Items the user added to the grocery list
 const selectedItems = [];
-
+// Colour references
 const colors = {
   red: "#EC2379",
   blue: "#0070FF",
@@ -59,6 +59,7 @@ const colors = {
   black: "#000000",
   green: "#00ff7f",
 };
+// Card swipe transitions
 const duration = 200;
 const transition = (
   <Transition.Sequence>
@@ -78,7 +79,7 @@ const transition = (
     </Transition.Together>
   </Transition.Sequence>
 );
-
+// Items in the card stack
 const GroceryCard = ({ card }) => (
   <View style={styles.card}>
     <Image source={{ uri: card.image }} style={styles.cardImage} />
@@ -95,25 +96,21 @@ const GroceryCard = ({ card }) => (
   </View>
 );
 
-const CardDetails = ({ index }) => (
-  <View style={styles.cardDetails} key={data[index].id}>
-    <Text style={[styles.text, styles.name]}>{data[index].name}</Text>
-    <Text style={[styles.text, styles.price]}>{data[index].price}</Text>
-  </View>
-);
-
 const keyExtractor = (item, index) => index.toString();
+// Keys to display when the list is exported
 const productKeys = ["Category", "Name", "Price", "QTY"];
-
+// Card swiper/transition
 const swiperRef = React.createRef();
 const transitionRef = React.createRef();
-
+// Array of product information
 const tableRows = [];
 
 export default function App() {
+  // ---- STATE -----
   const [index, setIndex] = React.useState(0); // Card index
-  const [groceryList, setListData] = React.useState([]); // Card index
-  const [addPopupVisible, setVisible] = React.useState(false); // Incrementor popup
+  const [groceryList, setListData] = React.useState([]); // Final array of selected items
+  // Incrementor popup
+  const [addPopupVisible, setVisible] = React.useState(false);
   // Product Profile popup in quick-add menu
   const [profileData, setProfileData] = React.useState(data[index]); // Incrementor popup
   const [profileVisible, setProfileVisible] = React.useState(false); // Profile popup
@@ -125,11 +122,14 @@ export default function App() {
   const [searchPopupVisible, setSearchVisible] = React.useState(false); // Incrementor popup
   // Table view
   const [tablePopupVisible, setTableVisible] = React.useState(false); // Incrementor popup
+  // Dark Mode toggle
+  const [darkMode, setDarkMode] = React.useState(false);
 
   const filteredData = data.filter((item) => {
     return item.name.toLowerCase().includes(search.toString().toLowerCase());
   });
-
+  //-----------------
+  // The product list in the quick-add menu
   const renderItem = ({ item }) => (
     <ListItem
       Component={TouchableScale}
@@ -178,13 +178,14 @@ export default function App() {
       }
     />
   );
-
+  // Moves to next item in the array with each swipe
   const onSwiped = () => {
     transitionRef.current.animateNextTransition();
     setIndex((index + 1) % data.length);
-    // Check if the list is done
+    // Check if the list is done and notify user if yes
     setEndPopup(index + 1 == data.length);
   };
+  // Add item to list when swiped right or quick-added
   const onSwipedRight = () => {
     selectedItems.push(data[index]);
     tableRows.push([
@@ -209,14 +210,17 @@ export default function App() {
     console.log(selectedItems);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
+  // Display the incrementor when the item is tapped
   const onTapCard = () => {
     setVisible(true);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     console.log(data[index]);
   };
+  // Detect a change in the search query and update the state
   const updateSearch = (search) => {
     setSearch(search);
   };
+  // Clear the search text when the menu is closed
   const clearOverlay = (search) => {
     setSearch("");
   };
@@ -246,11 +250,31 @@ export default function App() {
       />
     </View>
   );
+  // Product name and price appear below the card
+  const CardDetails = ({ index }) => (
+    <View style={styles.cardDetails} key={data[index].id}>
+      <Text
+        style={{
+          fontFamily: "Avenir-Light",
+          fontSize: 33,
+          color: darkMode ? colors.white : colors.black,
+        }}
+      >
+        {data[index].name}
+      </Text>
+      <Text style={[styles.text, styles.price]}>{data[index].price}</Text>
+    </View>
+  );
 
   return (
-    <View style={styles.container}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: darkMode ? "#1a1a1a" : colors.white,
+      }}
+    >
       <StatusBar hidden />
-      <View style={{ flexDirection: "row" }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
         <MaterialCommunityIcons.Button
           name="magnify"
           size={44}
@@ -261,20 +285,19 @@ export default function App() {
           onPress={() => {
             setSearchVisible(true);
           }}
-          style={{
-            justifyContent: "flex-start",
-            marginTop: 10,
-            marginLeft: 10,
+        />
+        <MaterialCommunityIcons.Button
+          name="theme-light-dark"
+          size={44}
+          backgroundColor="transparent"
+          underlayColor="transparent"
+          activeOpacity={0.3}
+          color={darkMode ? colors.white : colors.black}
+          onPress={() => {
+            setDarkMode(!darkMode);
           }}
         />
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "flex-end",
-            marginTop: 10,
-            marginRight: 10,
-          }}
-        >
+        <View>
           <MaterialCommunityIcons.Button
             name="format-list-checkbox"
             size={44}
