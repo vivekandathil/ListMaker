@@ -136,7 +136,7 @@ const GroceryCard = ({ card }) => (
       containerStyle={{ position: "absolute", top: -5, right: -5 }}
       badgeStyle={
         selectedItems.includes(card)
-          ? { backgroundColor: "lawngreen" }
+          ? { backgroundColor: "green" }
           : { backgroundColor: "transparent" }
       }
       value={selectedItems.includes(card) ? "Added" : ""}
@@ -213,7 +213,7 @@ export default function App() {
             containerStyle={{ position: "absolute", top: -5, right: -5 }}
             badgeStyle={
               selectedItems.includes(item)
-                ? { backgroundColor: "lawngreen" }
+                ? { backgroundColor: "green" }
                 : { backgroundColor: "transparent" }
             }
             value={selectedItems.includes(item) ? "Added" : ""}
