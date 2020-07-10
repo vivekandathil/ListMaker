@@ -315,7 +315,7 @@ export default function App() {
   );
   // Product name and price appear below the card
   const CardDetails = ({ index }) => (
-    <View style={styles.cardDetails} key={data[index].id}>
+    <View style={styles.cardDetails} key={data[index].upc}>
       <Text
         style={{
           fontFamily: "Avenir-Light",
@@ -331,7 +331,7 @@ export default function App() {
   const calculateCost = () => {
     let cost = 0;
     selectedItems.forEach((item) => {
-      cost += item.price;
+      cost += item.price * item.quantity;
     });
     return cost;
   };
@@ -497,7 +497,7 @@ export default function App() {
             slideFrom: "bottom",
           })
         }
-        height={0.94}
+        height={630}
         width={350}
       >
         <DialogContent
@@ -913,7 +913,7 @@ export default function App() {
             slideFrom: "bottom",
           })
         }
-        height={0.85}
+        height={580}
       >
         <DialogContent
           style={[
