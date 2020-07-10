@@ -28,7 +28,13 @@ import Dialog, {
 import NumericInput from "react-native-numeric-input";
 import * as Haptics from "expo-haptics";
 import { Colors } from "react-native/Libraries/NewAppScreen";
-import { SearchBar, ListItem, Card, Badge } from "react-native-elements";
+import {
+  SearchBar,
+  ListItem,
+  Card,
+  Header,
+  Badge,
+} from "react-native-elements";
 import TouchableScale from "react-native-touchable-scale";
 import {
   Table,
@@ -134,6 +140,7 @@ export default function App() {
 
   // ---- STATE -----
   const [index, setIndex] = React.useState(0); // Card index
+  const [settingsVisible, setSettingsVisible] = React.useState(false); // Card index
 
   const [groceryList, setListData] = React.useState([]); // Final array of selected items
   // Incrementor popup
@@ -286,6 +293,7 @@ export default function App() {
             fontFamily: "Avenir-Light",
             textAlign: "center",
             fontWeight: "bold",
+            color: darkMode ? colors.green : colors.black,
           }}
         >
           {data}
@@ -390,17 +398,18 @@ export default function App() {
             setSearchVisible(true);
           }}
         />
-        <MaterialCommunityIcons.Button
-          name="theme-light-dark"
-          size={44}
-          backgroundColor="transparent"
-          underlayColor="transparent"
-          activeOpacity={0.3}
-          color={darkMode ? colors.white : colors.black}
-          onPress={() => {
-            setDarkMode(!darkMode);
-          }}
-        />
+        <TouchableOpacity onPress={() => setSettingsVisible(true)}>
+          <Image
+            source={require("./assets/logo_small.png")}
+            style={{
+              width: 150,
+              height: 30,
+              resizeMode: "contain",
+              marginTop: 15,
+            }}
+          />
+        </TouchableOpacity>
+
         <View>
           <MaterialCommunityIcons.Button
             name="format-list-checkbox"
@@ -422,6 +431,56 @@ export default function App() {
         </View>
       </View>
       <Dialog
+        visible={settingsVisible}
+        onTouchOutside={() => {
+          setSettingsVisible(false);
+        }}
+        dialogTitle={
+          <DialogTitle
+            title="Settings"
+            style={{ backgroundColor: darkMode ? "#262626" : colors.white }}
+            textStyle={{ color: darkMode ? colors.white : colors.dark }}
+          />
+        }
+        dialogAnimation={
+          new SlideAnimation({
+            slideFrom: "bottom",
+          })
+        }
+        footer={
+          <DialogFooter>
+            <DialogButton
+              text="Done"
+              onPress={() => setSettingsVisible(false)}
+              style={{ backgroundColor: colors.green }}
+              textStyle={{ color: colors.black }}
+            />
+          </DialogFooter>
+        }
+        height={0.3}
+        width={0.5}
+      >
+        <DialogContent
+          style={{
+            backgroundColor: darkMode ? colors.dark : colors.white,
+          }}
+        >
+          <View style={{ justifyContent: "center", alignItems: "center" }}>
+            <MaterialCommunityIcons.Button
+              name="theme-light-dark"
+              size={64}
+              backgroundColor="transparent"
+              underlayColor="transparent"
+              activeOpacity={0.3}
+              color={darkMode ? colors.white : colors.black}
+              onPress={() => {
+                setDarkMode(!darkMode);
+              }}
+            />
+          </View>
+        </DialogContent>
+      </Dialog>
+      <Dialog
         visible={tablePopupVisible}
         onTouchOutside={() => {
           setTableVisible(false);
@@ -438,7 +497,7 @@ export default function App() {
             slideFrom: "bottom",
           })
         }
-        height={597}
+        height={0.94}
         width={350}
       >
         <DialogContent
@@ -482,7 +541,11 @@ export default function App() {
             </View>
 
             <View
-              style={{ flexDirection: "row", justifyContent: "space-evenly" }}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-evenly",
+                margin: 10,
+              }}
             >
               <MaterialCommunityIcons.Button
                 name="file-pdf-box"
@@ -622,6 +685,17 @@ export default function App() {
                 footer={
                   <DialogFooter>
                     <DialogButton
+                      text="Cancel"
+                      onPress={() => {
+                        setWhatsAppDialogVisible(false);
+                      }}
+                      style={{
+                        backgroundColor: colors.red,
+                        borderColor: colors.black,
+                      }}
+                      textStyle={{ color: colors.black }}
+                    />
+                    <DialogButton
                       text="Send"
                       onPress={() => {
                         Linking.openURL(
@@ -632,17 +706,6 @@ export default function App() {
                         );
                       }}
                       style={{ backgroundColor: colors.green }}
-                      textStyle={{ color: colors.black }}
-                    />
-                    <DialogButton
-                      text="Cancel"
-                      onPress={() => {
-                        setWhatsAppDialogVisible(false);
-                      }}
-                      style={{
-                        backgroundColor: colors.green,
-                        borderColor: colors.black,
-                      }}
                       textStyle={{ color: colors.black }}
                     />
                   </DialogFooter>
@@ -690,10 +753,18 @@ export default function App() {
             </View>
             <View style={{ height: 400 }}>
               <ScrollView bounces={true}>
-                <Table borderStyle={{ borderWidth: 1, borderColor: "#C1C0B9" }}>
+                <Table
+                  borderStyle={{
+                    borderWidth: 1,
+                    borderColor: darkMode ? colors.green : colors.black,
+                  }}
+                >
                   <Row
                     data={productKeys}
-                    style={{ height: 40, backgroundColor: colors.green }}
+                    style={{
+                      height: 40,
+                      backgroundColor: colors.green,
+                    }}
                     textStyle={{
                       fontFamily: "Avenir-Light",
                       fontWeight: "bold",
@@ -706,7 +777,7 @@ export default function App() {
                       key={index}
                       style={{
                         flexDirection: "row",
-                        backgroundColor: colors.white,
+                        backgroundColor: darkMode ? colors.dark : colors.white,
                       }}
                     >
                       {rowData.map((cellData, cellIndex) => (
@@ -720,6 +791,7 @@ export default function App() {
                           textStyle={{
                             fontFamily: "Avenir-Light",
                             textAlign: "center",
+                            color: darkMode ? colors.green : colors.black,
                           }}
                         />
                       ))}
@@ -730,9 +802,16 @@ export default function App() {
             </View>
           </View>
           <View>
-            <Text>
-              Total Estimated Cost: ${calculateCost()} + $
-              {Math.round(calculateCost() * 0.13 * 100) / 100} HST
+            <Text
+              style={{
+                color: darkMode ? colors.green : colors.black,
+                textAlign: "center",
+                marginTop: 10,
+                fontFamily: "Avenir-Light",
+              }}
+            >
+              Total Estimated Cost: ${Math.round(calculateCost() * 100) / 100} +
+              ${Math.round(calculateCost() * 0.13 * 100) / 100} HST
             </Text>
           </View>
         </DialogContent>
@@ -797,9 +876,6 @@ export default function App() {
           setSearchVisible(false);
           setSearch("");
         }}
-        containerStyle={{
-          backgroundColor: darkMode ? colors.dark : colors.white,
-        }}
         dialogTitle={
           <View
             style={{
@@ -826,7 +902,8 @@ export default function App() {
                 backgroundColor: darkMode ? "#333333" : colors.white,
                 textAlign: "center",
                 justifyContent: "center",
-                marginLeft: 40,
+                marginLeft: 45,
+                borderBottomColor: "transparent",
               }}
             />
           </View>
@@ -836,7 +913,7 @@ export default function App() {
             slideFrom: "bottom",
           })
         }
-        height={605}
+        height={0.85}
       >
         <DialogContent
           style={[
@@ -950,7 +1027,14 @@ export default function App() {
       <View style={styles.topContainer}></View>
       <View style={styles.swiperContainer}>
         <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
-          <Text style={styles.outof}>
+          <Text
+            style={{
+              textAlign: "center",
+              fontFamily: "Avenir-Light",
+              fontSize: 26,
+              color: darkMode ? colors.green : colors.red,
+            }}
+          >
             {index + 1}/{data.length}
           </Text>
         </View>
@@ -1023,6 +1107,7 @@ export default function App() {
             color={colors.red}
             onPress={() => swiperRef.current.swipeLeft()}
           />
+
           <MaterialCommunityIcons.Button
             name="cart-plus"
             size={94}
@@ -1051,7 +1136,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-evenly",
   },
   topContainer: {
-    flex: 0.03,
+    flex: 0.01,
     justifyContent: "center",
     alignItems: "center",
     marginTop: 10,
@@ -1091,12 +1176,7 @@ const styles = StyleSheet.create({
   text: { fontFamily: "Avenir-Light", fontSize: 33 },
   heading: { fontSize: 24, marginBottom: 10, color: colors.gray },
   price: { color: colors.green, fontSize: 32, fontWeight: "500" },
-  outof: {
-    textAlign: "center",
-    fontFamily: "Avenir-Light",
-    fontSize: 26,
-    color: "#dc143c",
-  },
+
   cardDetails: {
     alignItems: "center",
   },
