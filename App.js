@@ -16,7 +16,7 @@ import {
   Linking,
 } from "react-native";
 import Swiper from "react-native-deck-swiper";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, Fontisto } from "@expo/vector-icons";
 import { Transitioning, Transition } from "react-native-reanimated";
 import Dialog, {
   DialogContent,
@@ -34,6 +34,7 @@ import {
   Card,
   Header,
   Badge,
+  CheckBox,
 } from "react-native-elements";
 import TouchableScale from "react-native-touchable-scale";
 import {
@@ -48,6 +49,8 @@ import {
 import productJSON from "./data.json";
 import Communications from "react-native-communications";
 import axios from "axios";
+import { LinearGradient } from "expo-linear-gradient";
+import { SwipeListView } from "react-native-swipe-list-view";
 
 // Sample data from Loblaws Kanata (id=UPC code)
 const data = productJSON.data;
@@ -57,12 +60,14 @@ console.disableYellowBox = true;
 const selectedItems = [];
 // Colour references
 const colors = {
-  red: "#EC2379",
+  red: "#e52d27",
+  redLeft: "#b31217",
   blue: "#0070FF",
   gray: "#777777",
   white: "#ffffff",
   black: "#000000",
   green: "#00ff7f",
+  purple: "#9b5de5",
   dark: "#1a1a1a",
 };
 // Card swipe transitions
@@ -149,6 +154,7 @@ export default function App() {
   const [profileData, setProfileData] = React.useState(data[index]); // Incrementor popup
   const [profileVisible, setProfileVisible] = React.useState(false); // Profile popup
   const [quantity, setQuantity] = React.useState(1);
+  const [flavourQuantity, setFlavourQuantity] = React.useState(0);
   // End of the list reached
   const [endOfList, setEndPopup] = React.useState(false); // End of list popup
   // Search data
@@ -212,8 +218,8 @@ export default function App() {
             rounded
             textColor={darkMode ? colors.white : "#000"}
             iconStyle={{ color: darkMode ? colors.dark : colors.white }}
-            rightButtonBackgroundColor={colors.green}
-            leftButtonBackgroundColor={colors.green}
+            rightButtonBackgroundColor={colors.red}
+            leftButtonBackgroundColor={colors.redLeft}
             containerStyle={{
               backgroundColor: darkMode ? "#404040" : colors.white,
             }}
@@ -293,7 +299,7 @@ export default function App() {
             fontFamily: "Avenir-Light",
             textAlign: "center",
             fontWeight: "bold",
-            color: darkMode ? colors.green : colors.black,
+            color: darkMode ? colors.white : colors.black,
           }}
         >
           {data}
@@ -316,16 +322,36 @@ export default function App() {
   // Product name and price appear below the card
   const CardDetails = ({ index }) => (
     <View style={styles.cardDetails} key={data[index].upc}>
-      <Text
-        style={{
-          fontFamily: "Avenir-Light",
-          fontSize: 33,
-          color: darkMode ? colors.white : colors.black,
+      <ListItem
+        Component={TouchableScale}
+        friction={90} //
+        tension={100} // These props are passed to the parent component (here TouchableScale)
+        activeScale={0.75} //
+        linearGradientProps={{
+          colors: ["#93291E", "#F00000"],
+          start: [1, 0],
+          end: [0.2, 0],
         }}
-      >
-        {data[index].name}
-      </Text>
-      <Text style={[styles.text, styles.price]}>{data[index].price}</Text>
+        title={data[index].name}
+        containerStyle={{ width: 300 }}
+        titleStyle={{
+          color: "white",
+          fontFamily: "Avenir-Medium",
+          fontSize: 30,
+        }}
+        subtitleStyle={{
+          color: "white",
+          fontFamily: "Avenir-Light",
+          fontSize: 20,
+        }}
+        subtitle={
+          data[index].price +
+          (data[index].options === undefined
+            ? ""
+            : " - " + data[index].options.flavours.length + " options/flavours")
+        }
+        chevron={{ color: "white" }}
+      />
     </View>
   );
   const calculateCost = () => {
@@ -355,21 +381,35 @@ export default function App() {
   const generateWhatsApp = () => {
     let body = "*Here is your grocery list:*\n---------------------\n";
     let listIndex = 1;
-    selectedItems.forEach((item) => {
-      body +=
-        "*" +
-        listIndex.toString() +
-        "*" +
-        ". " +
-        (categoryEnabled ? "[" + item.category + "]" : "") +
-        item.name +
-        " _(x" +
-        item.quantity +
-        "_)\n";
-      listIndex++;
+    let storeList = sortStores();
+    storeList.forEach((store) => {
+      body += "*" + store + ":*\n";
+      selectedItems.forEach((item) => {
+        if (item.store == store) {
+          body +=
+            "*" +
+            listIndex.toString() +
+            "*" +
+            ". " +
+            (categoryEnabled ? "[" + item.category + "]" : "") +
+            item.name +
+            " _(x" +
+            item.quantity +
+            "_)\n";
+          listIndex++;
+        }
+      });
+      body += "\n----------------------\n";
     });
-    body += "\n(Generated by the ListMaker App!)";
+    body +=
+      "This should cost around $" +
+      Math.round(calculateCost() * 1.13 * 100) / 100 +
+      " with HST\n(Generated by the ListMaker App!)";
     return body;
+  };
+  const sortStores = () => {
+    // Get a list of all the unique stores in theselected items
+    return [...new Set(selectedItems.map((item) => item.store))];
   };
 
   return (
@@ -417,7 +457,7 @@ export default function App() {
             backgroundColor="transparent"
             underlayColor="transparent"
             activeOpacity={0.3}
-            color={colors.green}
+            color={colors.red}
             onPress={() => {
               setTableVisible(true);
             }}
@@ -452,7 +492,7 @@ export default function App() {
             <DialogButton
               text="Done"
               onPress={() => setSettingsVisible(false)}
-              style={{ backgroundColor: colors.green }}
+              style={{ backgroundColor: colors.red }}
               textStyle={{ color: colors.black }}
             />
           </DialogFooter>
@@ -756,14 +796,14 @@ export default function App() {
                 <Table
                   borderStyle={{
                     borderWidth: 1,
-                    borderColor: darkMode ? colors.green : colors.black,
+                    borderColor: darkMode ? colors.red : "#cccccc",
                   }}
                 >
                   <Row
                     data={productKeys}
                     style={{
                       height: 40,
-                      backgroundColor: colors.green,
+                      backgroundColor: colors.red,
                     }}
                     textStyle={{
                       fontFamily: "Avenir-Light",
@@ -791,7 +831,7 @@ export default function App() {
                           textStyle={{
                             fontFamily: "Avenir-Light",
                             textAlign: "center",
-                            color: darkMode ? colors.green : colors.black,
+                            color: darkMode ? colors.white : colors.black,
                           }}
                         />
                       ))}
@@ -804,7 +844,7 @@ export default function App() {
           <View>
             <Text
               style={{
-                color: darkMode ? colors.green : colors.black,
+                color: darkMode ? colors.white : colors.black,
                 textAlign: "center",
                 marginTop: 10,
                 fontFamily: "Avenir-Light",
@@ -893,6 +933,7 @@ export default function App() {
               style={{ justifyContent: "flex-start" }}
               onPress={() => {
                 setSearchVisible(false);
+                setSearch("");
               }}
             />
             <DialogTitle
@@ -976,7 +1017,35 @@ export default function App() {
                       " to List"
                     }
                     onPress={() => {
-                      onQuickAdded();
+                      if (profileData.options === undefined) {
+                        onQuickAdded();
+
+                        setQuantity(1);
+                      } else {
+                        profileData.options.flavours.forEach((flavour) => {
+                          if (flavour.quantity > 0) {
+                            const obj = {
+                              upc: flavour.id,
+                              name: profileData.name + ": " + flavour.name,
+                              price: flavour.price,
+                              quantity: flavour.quantity,
+                            };
+                            selectedItems.push(obj);
+                            tableRows.push([
+                              profileData.category,
+                              obj.name,
+                              obj.price,
+                              obj.quantity,
+                            ]);
+                            setListData(tableRows);
+                            console.log(selectedItems);
+                            Haptics.impactAsync(
+                              Haptics.ImpactFeedbackStyle.Medium
+                            );
+                          }
+                        });
+                      }
+                      setFlavourQuantity(0);
                       setProfileVisible(false);
                     }}
                   />
@@ -996,7 +1065,7 @@ export default function App() {
                   imageStyle={{ height: 300, width: 300 }}
                   containerStyle={{
                     backgroundColor: darkMode ? colors.dark : colors.white,
-                    borderColor: darkMode ? colors.green : "transparent",
+                    borderColor: darkMode ? colors.red : "transparent",
                   }}
                 >
                   <Text
@@ -1010,8 +1079,85 @@ export default function App() {
                     {profileData.name.endsWith("s") ? "are" : "is"} in the{" "}
                     {profileData.category} category and cost
                     {profileData.name.endsWith("s") ? "" : "s"} $
-                    {profileData.price} per unit.
+                    {profileData.price} per unit. Found at {profileData.store}
+                    {profileData.options == null
+                      ? "."
+                      : " with " +
+                        profileData.options.flavours.length +
+                        " flavours."}
                   </Text>
+                  <View style={{ height: 60 }}>
+                    {profileData.options === undefined ? (
+                      <View style={{ height: 1 }}></View>
+                    ) : (
+                      <FlatList
+                        data={profileData.options.flavours}
+                        renderItem={({ item }) => {
+                          return (
+                            <ListItem
+                              Component={TouchableScale}
+                              friction={90} //
+                              tension={100}
+                              activeScale={0.95} //
+                              linearGradientProps={{
+                                colors: [colors.red, "#b31217"],
+                                start: [1, 0],
+                                end: [0.2, 0],
+                              }}
+                              containerStyle={{ width: 290, height: 45 }}
+                              leftAvatar={{
+                                rounded: true,
+                                source: { uri: item.image },
+                                height: 25,
+                                width: 25,
+                              }}
+                              title={item.name}
+                              titleStyle={{
+                                color: "white",
+                                fontFamily: "Avenir-Medium",
+                                fontSize: 15,
+                              }}
+                              chevron={{ color: "white" }}
+                              rightElement={
+                                <NumericInput
+                                  onChange={(value) => {
+                                    item.quantity = value;
+                                  }}
+                                  value={flavourQuantity}
+                                  totalWidth={90}
+                                  totalHeight={30}
+                                  iconSize={25}
+                                  step={1}
+                                  valueType="real"
+                                  rounded
+                                  textColor={darkMode ? colors.white : "#000"}
+                                  iconStyle={{
+                                    color: darkMode
+                                      ? colors.dark
+                                      : colors.white,
+                                  }}
+                                  rightButtonBackgroundColor={colors.red}
+                                  leftButtonBackgroundColor={colors.redLeft}
+                                  containerStyle={{
+                                    backgroundColor: darkMode
+                                      ? "#404040"
+                                      : colors.white,
+                                  }}
+                                  maxValue={10}
+                                  minValue={1}
+                                  initValue={0}
+                                  borderColor={
+                                    darkMode ? "#404040" : colors.white
+                                  }
+                                />
+                              }
+                            />
+                          );
+                        }}
+                        keyExtractor={(item) => item.id}
+                      />
+                    )}
+                  </View>
                 </Card>
               </DialogContent>
             </Dialog>
@@ -1032,7 +1178,7 @@ export default function App() {
               textAlign: "center",
               fontFamily: "Avenir-Light",
               fontSize: 26,
-              color: darkMode ? colors.green : colors.red,
+              color: darkMode ? colors.white : colors.red,
             }}
           >
             {index + 1}/{data.length}
@@ -1098,25 +1244,23 @@ export default function App() {
           <CardDetails index={index} />
         </Transitioning.View>
         <View style={styles.bottomContainerButtons}>
-          <MaterialCommunityIcons.Button
-            name="cart-remove"
-            size={94}
-            backgroundColor="transparent"
-            underlayColor="transparent"
-            activeOpacity={0.3}
-            color={colors.red}
-            onPress={() => swiperRef.current.swipeLeft()}
-          />
-
-          <MaterialCommunityIcons.Button
-            name="cart-plus"
-            size={94}
-            backgroundColor="transparent"
-            underlayColor="transparent"
-            activeOpacity={0.3}
-            color={colors.green}
-            onPress={() => swiperRef.current.swipeRight()}
-          />
+          <TouchableOpacity onPress={() => swiperRef.current.swipeLeft()}>
+            <Image
+              source={require("./assets/remove.png")}
+              style={{ height: 80, width: 80, marginRight: 20 }}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => swiperRef.current.swipeRight()}>
+            <Image
+              source={require("./assets/add.png")}
+              style={{
+                height: 80,
+                width: 80,
+                marginLeft: 20,
+                resizeMode: "contain",
+              }}
+            />
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -1132,7 +1276,7 @@ const styles = StyleSheet.create({
     flex: 0.58,
   },
   bottomContainer: {
-    flex: 0.35,
+    flex: 0.45,
     justifyContent: "space-evenly",
   },
   topContainer: {
@@ -1175,7 +1319,7 @@ const styles = StyleSheet.create({
   },
   text: { fontFamily: "Avenir-Light", fontSize: 33 },
   heading: { fontSize: 24, marginBottom: 10, color: colors.gray },
-  price: { color: colors.green, fontSize: 32, fontWeight: "500" },
+  price: { color: colors.purple, fontSize: 32, fontWeight: "500" },
 
   cardDetails: {
     alignItems: "center",
