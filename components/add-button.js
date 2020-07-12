@@ -28,29 +28,6 @@ import Dialog, {
 } from "react-native-popup-dialog";
 import NumericInput from "react-native-numeric-input";
 import * as Haptics from "expo-haptics";
-import { Colors } from "react-native/Libraries/NewAppScreen";
-import {
-  SearchBar,
-  ListItem,
-  Card,
-  Header,
-  Badge,
-  CheckBox,
-} from "react-native-elements";
-import TouchableScale from "react-native-touchable-scale";
-import {
-  Table,
-  TableWrapper,
-  Row,
-  Rows,
-  Col,
-  Cols,
-  Cell,
-} from "react-native-table-component";
-import Communications from "react-native-communications";
-import axios from "axios";
-import { LinearGradient } from "expo-linear-gradient";
-import { SwipeListView } from "react-native-swipe-list-view";
 
 const AddProductButton = ({
   profileData,
@@ -73,11 +50,7 @@ const AddProductButton = ({
       }}
       text={
         "Add " +
-        quantity +
-        " " +
-        (profileData.name.length <= 6
-          ? profileData.name
-          : profileData.name.slice(0, 5) + "...") +
+        (profileData.options === undefined ? "(" + quantity + ")" : "All") +
         " to List"
       }
       onPress={() => {

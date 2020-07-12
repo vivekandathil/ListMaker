@@ -185,44 +185,65 @@ export default function App() {
         setProfileVisible(true);
       }}
       rightElement={
-        <View>
-          <NumericInput
-            onChange={(value) => {
-              item.quantity = value;
-              setQuantity(value);
-            }}
-            totalWidth={80}
-            totalHeight={40}
-            iconSize={25}
-            step={1}
-            valueType="real"
-            rounded
-            textColor={darkMode ? colors.white : "#000"}
-            iconStyle={{ color: darkMode ? colors.dark : colors.white }}
-            rightButtonBackgroundColor={colors.red}
-            leftButtonBackgroundColor={colors.redLeft}
-            containerStyle={{
-              backgroundColor: darkMode ? "#404040" : colors.white,
-            }}
-            maxValue={10}
-            minValue={1}
-            initValue={1}
-            borderColor={darkMode ? colors.dark : colors.white}
-          />
-          <Badge
-            status="success"
-            containerStyle={{ position: "absolute", top: -5, right: -5 }}
-            badgeStyle={{
-              backgroundColor: selectedItems.includes(item)
-                ? "green"
-                : "transparent",
-              borderColor: selectedItems.includes(item)
-                ? "lawngreen"
-                : "transparent",
-            }}
-            value={selectedItems.includes(item) ? "Added" : ""}
-          />
-        </View>
+        item.options === undefined ? (
+          <View>
+            <NumericInput
+              onChange={(value) => {
+                item.quantity = value;
+                setQuantity(value);
+              }}
+              totalWidth={80}
+              totalHeight={40}
+              iconSize={25}
+              step={1}
+              valueType="real"
+              rounded
+              textColor={darkMode ? colors.white : "#000"}
+              iconStyle={{ color: darkMode ? colors.dark : colors.white }}
+              rightButtonBackgroundColor={colors.red}
+              leftButtonBackgroundColor={colors.redLeft}
+              containerStyle={{
+                backgroundColor: darkMode ? "#404040" : colors.white,
+              }}
+              maxValue={10}
+              minValue={1}
+              initValue={1}
+              borderColor={darkMode ? colors.dark : colors.white}
+            />
+            <Badge
+              status="success"
+              containerStyle={{ position: "absolute", top: -5, right: -5 }}
+              badgeStyle={{
+                backgroundColor: selectedItems.includes(item)
+                  ? "green"
+                  : "transparent",
+                borderColor: selectedItems.includes(item)
+                  ? "lawngreen"
+                  : "transparent",
+              }}
+              value={selectedItems.includes(item) ? "Added" : ""}
+            />
+          </View>
+        ) : (
+          <View>
+            <Text style={{ fontFamily: "Avenir-Heavy", color: colors.red }}>
+              View Options
+            </Text>
+            <Badge
+              status="success"
+              containerStyle={{ position: "absolute", top: -5, right: -5 }}
+              badgeStyle={{
+                backgroundColor: selectedItems.includes(item)
+                  ? "green"
+                  : "transparent",
+                borderColor: selectedItems.includes(item)
+                  ? "lawngreen"
+                  : "transparent",
+              }}
+              value={selectedItems.includes(item) ? "Added" : ""}
+            />
+          </View>
+        )
       }
     />
   );
@@ -1035,6 +1056,7 @@ export default function App() {
               visible={profileVisible}
               onTouchOutside={() => {
                 setProfileVisible(false);
+                setQuantity(1);
               }}
               footer={
                 <DialogFooter>
@@ -1047,6 +1069,7 @@ export default function App() {
                     text={"Cancel"}
                     onPress={() => {
                       setProfileVisible(false);
+                      setQuantity(1);
                     }}
                   />
                   <AddProductButton
@@ -1074,6 +1097,7 @@ export default function App() {
                   colors={colors}
                   flavourQuantity={flavourQuantity}
                   setFlavourQuantity={setFlavourQuantity}
+                  setQuantity={setQuantity}
                 />
               </DialogContent>
             </Dialog>

@@ -10,6 +10,7 @@ const Profile = ({
   darkMode,
   colors,
   flavourQuantity,
+  setQuantity,
   setFlavourQuantity,
 }) => {
   return (
@@ -30,6 +31,7 @@ const Profile = ({
           fontFamily: "Avenir-Light",
           marginBottom: 10,
           color: darkMode ? colors.white : colors.black,
+          textAlign: "center",
         }}
       >
         {profileData.name} {profileData.name.endsWith("s") ? "are" : "is"} in
@@ -42,7 +44,31 @@ const Profile = ({
       </Text>
       <View style={{ height: 60 }}>
         {profileData.options === undefined ? (
-          <View style={{ height: 1 }}></View>
+          <View style={{ alignItems: "center" }}>
+            <NumericInput
+              onChange={(value) => {
+                profileData.quantity = value;
+                setQuantity(value);
+              }}
+              totalWidth={200}
+              totalHeight={60}
+              iconSize={25}
+              step={1}
+              valueType="real"
+              rounded
+              textColor={darkMode ? colors.white : "#000"}
+              iconStyle={{ color: darkMode ? colors.dark : colors.white }}
+              rightButtonBackgroundColor={colors.red}
+              leftButtonBackgroundColor={colors.redLeft}
+              containerStyle={{
+                backgroundColor: darkMode ? "#404040" : colors.white,
+              }}
+              maxValue={10}
+              minValue={1}
+              initValue={1}
+              borderColor={darkMode ? colors.dark : colors.white}
+            />
+          </View>
         ) : (
           <FlatList
             data={profileData.options.flavours}
