@@ -14,6 +14,7 @@ import {
   Switch,
   TextInput,
   Linking,
+  Alert,
 } from "react-native";
 import Swiper from "react-native-deck-swiper";
 import { MaterialCommunityIcons, Fontisto } from "@expo/vector-icons";
@@ -51,13 +52,15 @@ import Communications from "react-native-communications";
 import axios from "axios";
 import { LinearGradient } from "expo-linear-gradient";
 import { SwipeListView } from "react-native-swipe-list-view";
+import Profile from "./components/profile.js";
+import AddProductButton from "./components/add-button.js";
 
 // Sample data from Loblaws Kanata (id=UPC code)
 const data = productJSON.data;
 // Disale Expo warnings in the app
 console.disableYellowBox = true;
 // Items the user added to the grocery list
-const selectedItems = [];
+let selectedItems = [];
 // Colour references
 const colors = {
   red: "#e52d27",
@@ -115,38 +118,15 @@ const keyExtractor = (item, index) => index.toString();
 const productKeys = ["Category", "Name", "Price", "QTY"];
 // Card swiper/transition
 const swiperRef = React.createRef();
+const tableRef = React.createRef();
 const transitionRef = React.createRef();
 // Array of product information
-const tableRows = [];
+let tableRows = [];
 
 export default function App() {
-  /*
-  const [list, setList] = React.useState([]);
-
-  useEffect(() => {
-    let isMounted = true;
-    axios
-      .get(
-        "https://elasticbeanstalk-us-east-2-431977706224.s3.us-east-2.amazonaws.com/data.json"
-      )
-      .then((res) => {
-        console.log("hello");
-
-        if (isMounted) setList(res.data.data);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-  */
-
   // ---- STATE -----
   const [index, setIndex] = React.useState(0); // Card index
   const [settingsVisible, setSettingsVisible] = React.useState(false); // Card index
-
   const [groceryList, setListData] = React.useState([]); // Final array of selected items
   // Incrementor popup
   const [addPopupVisible, setVisible] = React.useState(false);
@@ -173,12 +153,13 @@ export default function App() {
     false
   );
   const [whatsAppTo, setWhatsAppTo] = React.useState("");
+  //-----------------
 
+  // Data to display for the search results
   const filteredData = data.filter((item) => {
     return item.name.toLowerCase().includes(search.toString().toLowerCase());
   });
 
-  //-----------------
   // The product list in the quick-add menu
   const renderItem = ({ item }) => (
     <ListItem
@@ -291,18 +272,16 @@ export default function App() {
   const clearOverlay = (search) => {
     setSearch("");
   };
-  const removeButton = (data, index) => (
+  const removeButton = (num, index) => (
     <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
       <View style={{ justifyContent: "center" }}>
         <Text
-          style={{
-            fontFamily: "Avenir-Light",
-            textAlign: "center",
-            fontWeight: "bold",
-            color: darkMode ? colors.white : colors.black,
-          }}
+          style={[
+            styles.quantityStyle,
+            { color: darkMode ? colors.white : colors.black },
+          ]}
         >
-          {data}
+          {num}
         </Text>
       </View>
       <MaterialCommunityIcons.Button
@@ -313,8 +292,11 @@ export default function App() {
         activeOpacity={0.3}
         color={colors.red}
         onPress={() => {
-          /* remove item */
-          alert(data);
+          alert("Removed " + selectedItems[index].name + " from list");
+          selectedItems.splice(index, 1);
+          tableRows.splice(index, 1);
+          setListData(tableRows);
+          setTableVisible(false);
         }}
       />
     </View>
@@ -441,12 +423,7 @@ export default function App() {
         <TouchableOpacity onPress={() => setSettingsVisible(true)}>
           <Image
             source={require("./assets/logo_small.png")}
-            style={{
-              width: 150,
-              height: 30,
-              resizeMode: "contain",
-              marginTop: 15,
-            }}
+            style={styles.logoStyle}
           />
         </TouchableOpacity>
 
@@ -497,8 +474,8 @@ export default function App() {
             />
           </DialogFooter>
         }
-        height={0.3}
-        width={0.5}
+        height={0.6}
+        width={0.8}
       >
         <DialogContent
           style={{
@@ -515,6 +492,68 @@ export default function App() {
               color={darkMode ? colors.white : colors.black}
               onPress={() => {
                 setDarkMode(!darkMode);
+              }}
+            />
+            <ListItem
+              Component={TouchableScale}
+              friction={70} //
+              tension={100} // These props are passed to the parent component (here TouchableScale)
+              activeScale={0.65}
+              containerStyle={{ width: 200, margin: 5 }}
+              linearGradientProps={{
+                colors: ["#ED213A", "#93291E"],
+                start: [1, 0],
+                end: [0.2, 0],
+              }}
+              title="Reset Card Stack"
+              titleStyle={{ color: "white", fontFamily: "Avenir-Light" }}
+              chevron={{ color: "white" }}
+              onPress={() => {
+                Haptics.notificationAsync(
+                  Haptics.NotificationFeedbackType.Success
+                );
+                setIndex(0);
+              }}
+            />
+            <ListItem
+              Component={TouchableScale}
+              friction={70} //
+              tension={100} // These props are passed to the parent component (here TouchableScale)
+              activeScale={0.65}
+              containerStyle={{ width: 200, margin: 5 }}
+              linearGradientProps={{
+                colors: ["#ffe259", "#ffa751"],
+                start: [1, 0],
+                end: [0.2, 0],
+              }}
+              title="Clear Grocery List"
+              titleStyle={{ color: "white", fontFamily: "Avenir-Light" }}
+              chevron={{ color: "white" }}
+              onPress={() => {
+                Haptics.notificationAsync(
+                  Haptics.NotificationFeedbackType.Success
+                );
+                Alert.alert(
+                  "Warning",
+                  "Are you sure you want to clear your list?",
+                  [
+                    {
+                      text: "Nope",
+
+                      style: "cancel",
+                    },
+                    {
+                      text: "Yes",
+                      onPress: () => {
+                        selectedItems = [];
+                        setListData([]);
+                        tableRows = [];
+                        console.log("Emptied List");
+                      },
+                    },
+                  ],
+                  { cancelable: false }
+                );
               }}
             />
           </View>
@@ -793,51 +832,60 @@ export default function App() {
             </View>
             <View style={{ height: 400 }}>
               <ScrollView bounces={true}>
-                <Table
-                  borderStyle={{
-                    borderWidth: 1,
-                    borderColor: darkMode ? colors.red : "#cccccc",
-                  }}
-                >
-                  <Row
-                    data={productKeys}
-                    style={{
-                      height: 40,
-                      backgroundColor: colors.red,
+                {selectedItems.length === 0 ? (
+                  <Text style={{ fontFamily: "Avenir-Light" }}>
+                    Your list is empty...
+                  </Text>
+                ) : (
+                  <Table
+                    borderStyle={{
+                      borderWidth: 1,
+                      borderColor: darkMode ? colors.red : "#cccccc",
                     }}
-                    textStyle={{
-                      fontFamily: "Avenir-Light",
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      margin: 9,
-                    }}
-                  />
-                  {groceryList.map((rowData, index) => (
-                    <TableWrapper
-                      key={index}
+                    ref={tableRef}
+                  >
+                    <Row
+                      data={productKeys}
                       style={{
-                        flexDirection: "row",
-                        backgroundColor: darkMode ? colors.dark : colors.white,
+                        height: 40,
+                        backgroundColor: colors.red,
                       }}
-                    >
-                      {rowData.map((cellData, cellIndex) => (
-                        <Cell
-                          key={cellIndex}
-                          data={
-                            cellIndex === 3
-                              ? removeButton(cellData, index)
-                              : cellData
-                          }
-                          textStyle={{
-                            fontFamily: "Avenir-Light",
-                            textAlign: "center",
-                            color: darkMode ? colors.white : colors.black,
-                          }}
-                        />
-                      ))}
-                    </TableWrapper>
-                  ))}
-                </Table>
+                      textStyle={{
+                        fontFamily: "Avenir-Light",
+                        fontWeight: "bold",
+                        textAlign: "center",
+                        margin: 9,
+                      }}
+                    />
+                    {groceryList.map((rowData, index) => (
+                      <TableWrapper
+                        key={index}
+                        style={{
+                          flexDirection: "row",
+                          backgroundColor: darkMode
+                            ? colors.dark
+                            : colors.white,
+                        }}
+                      >
+                        {rowData.map((cellData, cellIndex) => (
+                          <Cell
+                            key={cellIndex}
+                            data={
+                              cellIndex === 3
+                                ? removeButton(cellData, index)
+                                : cellData
+                            }
+                            textStyle={{
+                              fontFamily: "Avenir-Light",
+                              textAlign: "center",
+                              color: darkMode ? colors.white : colors.black,
+                            }}
+                          />
+                        ))}
+                      </TableWrapper>
+                    ))}
+                  </Table>
+                )}
               </ScrollView>
             </View>
           </View>
@@ -1001,53 +1049,17 @@ export default function App() {
                       setProfileVisible(false);
                     }}
                   />
-                  <DialogButton
-                    style={{ backgroundColor: colors.green }}
-                    textStyle={{
-                      color: colors.black,
-                      fontFamily: "Avenir-Light",
-                    }}
-                    text={
-                      "Add " +
-                      quantity +
-                      " " +
-                      (profileData.name.length <= 6
-                        ? profileData.name
-                        : profileData.name.slice(0, 5) + "...") +
-                      " to List"
-                    }
-                    onPress={() => {
-                      if (profileData.options === undefined) {
-                        onQuickAdded();
-
-                        setQuantity(1);
-                      } else {
-                        profileData.options.flavours.forEach((flavour) => {
-                          if (flavour.quantity > 0) {
-                            const obj = {
-                              upc: flavour.id,
-                              name: profileData.name + ": " + flavour.name,
-                              price: flavour.price,
-                              quantity: flavour.quantity,
-                            };
-                            selectedItems.push(obj);
-                            tableRows.push([
-                              profileData.category,
-                              obj.name,
-                              obj.price,
-                              obj.quantity,
-                            ]);
-                            setListData(tableRows);
-                            console.log(selectedItems);
-                            Haptics.impactAsync(
-                              Haptics.ImpactFeedbackStyle.Medium
-                            );
-                          }
-                        });
-                      }
-                      setFlavourQuantity(0);
-                      setProfileVisible(false);
-                    }}
+                  <AddProductButton
+                    profileData={profileData}
+                    colors={colors}
+                    selectedItems={selectedItems}
+                    onQuickAdded={onQuickAdded}
+                    setListData={setListData}
+                    setQuantity={setQuantity}
+                    setFlavourQuantity={setFlavourQuantity}
+                    setProfileVisible={setProfileVisible}
+                    tableRows={tableRows}
+                    quantity={quantity}
                   />
                 </DialogFooter>
               }
@@ -1056,109 +1068,13 @@ export default function App() {
               }}
             >
               <DialogContent style={styles.popup}>
-                <Card
-                  title={profileData.name}
-                  titleStyle={{
-                    color: darkMode ? colors.white : colors.black,
-                  }}
-                  image={{ uri: profileData.image }}
-                  imageStyle={{ height: 300, width: 300 }}
-                  containerStyle={{
-                    backgroundColor: darkMode ? colors.dark : colors.white,
-                    borderColor: darkMode ? colors.red : "transparent",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: "Avenir-Light",
-                      marginBottom: 10,
-                      color: darkMode ? colors.white : colors.black,
-                    }}
-                  >
-                    {profileData.name}{" "}
-                    {profileData.name.endsWith("s") ? "are" : "is"} in the{" "}
-                    {profileData.category} category and cost
-                    {profileData.name.endsWith("s") ? "" : "s"} $
-                    {profileData.price} per unit. Found at {profileData.store}
-                    {profileData.options == null
-                      ? "."
-                      : " with " +
-                        profileData.options.flavours.length +
-                        " flavours."}
-                  </Text>
-                  <View style={{ height: 60 }}>
-                    {profileData.options === undefined ? (
-                      <View style={{ height: 1 }}></View>
-                    ) : (
-                      <FlatList
-                        data={profileData.options.flavours}
-                        renderItem={({ item }) => {
-                          return (
-                            <ListItem
-                              Component={TouchableScale}
-                              friction={90} //
-                              tension={100}
-                              activeScale={0.95} //
-                              linearGradientProps={{
-                                colors: [colors.red, "#b31217"],
-                                start: [1, 0],
-                                end: [0.2, 0],
-                              }}
-                              containerStyle={{ width: 290, height: 45 }}
-                              leftAvatar={{
-                                rounded: true,
-                                source: { uri: item.image },
-                                height: 25,
-                                width: 25,
-                              }}
-                              title={item.name}
-                              titleStyle={{
-                                color: "white",
-                                fontFamily: "Avenir-Medium",
-                                fontSize: 15,
-                              }}
-                              chevron={{ color: "white" }}
-                              rightElement={
-                                <NumericInput
-                                  onChange={(value) => {
-                                    item.quantity = value;
-                                  }}
-                                  value={flavourQuantity}
-                                  totalWidth={90}
-                                  totalHeight={30}
-                                  iconSize={25}
-                                  step={1}
-                                  valueType="real"
-                                  rounded
-                                  textColor={darkMode ? colors.white : "#000"}
-                                  iconStyle={{
-                                    color: darkMode
-                                      ? colors.dark
-                                      : colors.white,
-                                  }}
-                                  rightButtonBackgroundColor={colors.red}
-                                  leftButtonBackgroundColor={colors.redLeft}
-                                  containerStyle={{
-                                    backgroundColor: darkMode
-                                      ? "#404040"
-                                      : colors.white,
-                                  }}
-                                  maxValue={10}
-                                  minValue={1}
-                                  initValue={0}
-                                  borderColor={
-                                    darkMode ? "#404040" : colors.white
-                                  }
-                                />
-                              }
-                            />
-                          );
-                        }}
-                        keyExtractor={(item) => item.id}
-                      />
-                    )}
-                  </View>
-                </Card>
+                <Profile
+                  profileData={profileData}
+                  darkMode={darkMode}
+                  colors={colors}
+                  flavourQuantity={flavourQuantity}
+                  setFlavourQuantity={setFlavourQuantity}
+                />
               </DialogContent>
             </Dialog>
             <FlatList
@@ -1334,5 +1250,16 @@ const styles = StyleSheet.create({
   },
   popupLight: {
     backgroundColor: colors.white,
+  },
+  quantityStyle: {
+    fontFamily: "Avenir-Light",
+    textAlign: "center",
+    fontWeight: "bold",
+  },
+  logoStyle: {
+    width: 150,
+    height: 30,
+    resizeMode: "contain",
+    marginTop: 15,
   },
 });
