@@ -1,7 +1,7 @@
 ![](logo_small.png) 
 ----------------------------------
 
-![](v4.gif) ![](listedit.jpeg) ![](v3.gif)
+![](v4.gif) ![](listedit.jpeg) ![](darkmode.gif)
 
 # Simplified grocery list generator:
  - Grocery items are arranged as cards which can be swiped left or right
