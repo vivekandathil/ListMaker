@@ -54,6 +54,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SwipeListView } from "react-native-swipe-list-view";
 import Profile from "./components/profile.js";
 import AddProductButton from "./components/add-button.js";
+import PDFLib, { PDFDocument, PDFPage } from "react-native-pdf-lib";
 
 // Sample data from Loblaws Kanata (id=UPC code)
 const data = productJSON.data;
@@ -153,6 +154,8 @@ export default function App() {
     false
   );
   const [whatsAppTo, setWhatsAppTo] = React.useState("");
+  // Table-Card view toggle button
+  const [cardView, setCardView] = React.useState(false);
   //-----------------
 
   // Data to display for the search results
@@ -281,7 +284,9 @@ export default function App() {
   };
   // Display the incrementor when the item is tapped
   const onTapCard = () => {
+    setQuantity(1);
     setVisible(true);
+
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     console.log(data[index]);
   };
@@ -354,6 +359,11 @@ export default function App() {
             : " - " + data[index].options.flavours.length + " options/flavours")
         }
         chevron={{ color: "white" }}
+        onPress={() => {
+          setProfileData(data[index]);
+          setQuantity(1);
+          setVisible(true);
+        }}
       />
     </View>
   );
@@ -414,6 +424,28 @@ export default function App() {
     // Get a list of all the unique stores in theselected items
     return [...new Set(selectedItems.map((item) => item.store))];
   };
+
+  const page1 = PDFPage.create()
+    .setMediaBox(200, 200)
+    .drawText("You can add text and rectangles to the PDF!", {
+      x: 5,
+      y: 235,
+      color: "#007386",
+    })
+    .drawRectangle({
+      x: 25,
+      y: 25,
+      width: 150,
+      height: 150,
+      color: "#FF99CC",
+    })
+    .drawRectangle({
+      x: 75,
+      y: 75,
+      width: 50,
+      height: 50,
+      color: "#99FFCC",
+    });
 
   return (
     <SafeAreaView
@@ -638,6 +670,20 @@ export default function App() {
               >
                 Export Options
               </Text>
+              <MaterialCommunityIcons.Button
+                name={cardView ? "card-text-outline" : "view-list"}
+                size={44}
+                backgroundColor="transparent"
+                underlayColor="transparent"
+                activeOpacity={0.3}
+                color={colors.red}
+                style={{
+                  marginLeft: 26,
+                }}
+                onPress={() => {
+                  setCardView(!cardView);
+                }}
+              />
             </View>
 
             <View
@@ -655,7 +701,7 @@ export default function App() {
                 activeOpacity={0.3}
                 color={"red"}
                 onPress={() => {
-                  alert("exported to PDF (not really)");
+                  console.log("pdf");
                 }}
               />
               <MaterialCommunityIcons.Button
@@ -857,7 +903,7 @@ export default function App() {
                   <Text style={{ fontFamily: "Avenir-Light" }}>
                     Your list is empty...
                   </Text>
-                ) : (
+                ) : !cardView ? (
                   <Table
                     borderStyle={{
                       borderWidth: 1,
@@ -906,6 +952,39 @@ export default function App() {
                       </TableWrapper>
                     ))}
                   </Table>
+                ) : (
+                  <FlatList
+                    data={selectedItems}
+                    renderItem={({ item }) => {
+                      return (
+                        <ListItem
+                          Component={TouchableScale}
+                          friction={90} //
+                          tension={100}
+                          activeScale={0.95}
+                          bottomDivider
+                          containerStyle={{
+                            width: 290,
+                            height: 45,
+                          }}
+                          leftAvatar={{
+                            rounded: true,
+                            source: { uri: item.image },
+                            height: 25,
+                            width: 25,
+                          }}
+                          title={item.name + " (" + item.quantity + ")"}
+                          titleStyle={{
+                            color: darkMode ? colors.white : colors.black,
+                            fontFamily: "Avenir-Light",
+                            fontSize: 16,
+                          }}
+                          chevron={{ color: "white" }}
+                        />
+                      );
+                    }}
+                    keyExtractor={(item) => item.id}
+                  />
                 )}
               </ScrollView>
             </View>
@@ -934,7 +1013,11 @@ export default function App() {
         footer={
           <DialogFooter>
             <DialogButton
-              text="Done"
+              text={
+                profileData.options === undefined
+                  ? "Set Quantity: " + quantity
+                  : "Set Flavour Quantities"
+              }
               onPress={() => {
                 setVisible(false);
               }}
@@ -946,23 +1029,13 @@ export default function App() {
       >
         <DialogContent style={styles.popup}>
           <View style={{ marginTop: 20, marginBottom: 20 }}>
-            <NumericInput
-              onChange={(value) => {
-                data[index].quantity = value;
-              }}
-              totalWidth={240}
-              totalHeight={50}
-              iconSize={25}
-              step={1}
-              valueType="real"
-              rounded
-              textColor="#000"
-              iconStyle={{ color: "white" }}
-              rightButtonBackgroundColor={colors.green}
-              leftButtonBackgroundColor={colors.red}
-              maxValue={10}
-              minValue={1}
-              initValue={1}
+            <Profile
+              profileData={profileData}
+              darkMode={darkMode}
+              colors={colors}
+              flavourQuantity={flavourQuantity}
+              setFlavourQuantity={setFlavourQuantity}
+              setQuantity={setQuantity}
             />
           </View>
         </DialogContent>
