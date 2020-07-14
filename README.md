@@ -21,7 +21,7 @@
  ### Dark Mode
   - The app can be switched between light and dark mode
  ### Reset Card index
- - Resets the card deck to thr first item
+ - Resets the card deck to the first item
  ### Clear Grocery List
  - Remove all selected items and restart with an empty list
  # Installation
