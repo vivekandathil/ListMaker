@@ -1,4 +1,4 @@
-![](logo_small.png) 
+![](Logo.png) 
 ----------------------------------
 
 ![](v4.gif) ![](listedit.jpeg) ![](darkmode.gif)
