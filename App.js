@@ -35,6 +35,7 @@ import {
   Card,
   Header,
   Badge,
+  Overlay,
   CheckBox,
 } from "react-native-elements";
 import TouchableScale from "react-native-touchable-scale";
@@ -50,11 +51,11 @@ import {
 import productJSON from "./data.json";
 import Communications from "react-native-communications";
 import axios from "axios";
-import { LinearGradient } from "expo-linear-gradient";
-import { SwipeListView } from "react-native-swipe-list-view";
 import Profile from "./components/profile.js";
 import AddProductButton from "./components/add-button.js";
-import PDFLib, { PDFDocument, PDFPage } from "react-native-pdf-lib";
+import { Camera } from 'expo-camera';
+import { BarCodeScanner } from 'expo-barcode-scanner';
+
 
 // Sample data from Loblaws Kanata (id=UPC code)
 //const data = productJSON.data;
@@ -147,7 +148,7 @@ export default function App() {
         "http://vivek.kandathil.ca/files/products.json"
       );
       if (mounted) {
-        console.log(response.data.data)
+
         setData(response.data.data);
       }
     };
@@ -157,7 +158,7 @@ export default function App() {
       // When cleanup is called, toggle the mounted variable to false
       mounted = false;
     };
-  }, []);
+  }, []); // Empty array = nothing to watch > only run once
 
   // ---- STATE -----
   const [index, setIndex] = React.useState(0); // Card index
@@ -487,27 +488,31 @@ export default function App() {
     return [...new Set(selectedItems.map((item) => item.store))];
   };
 
-  const page1 = PDFPage.create()
-    .setMediaBox(200, 200)
-    .drawText("You can add text and rectangles to the PDF!", {
-      x: 5,
-      y: 235,
-      color: "#007386",
-    })
-    .drawRectangle({
-      x: 25,
-      y: 25,
-      width: 150,
-      height: 150,
-      color: "#FF99CC",
-    })
-    .drawRectangle({
-      x: 75,
-      y: 75,
-      width: 50,
-      height: 50,
-      color: "#99FFCC",
-    });
+  const [hasPermission, setHasPermission] = React.useState(null);
+  const [type, setType] = React.useState(Camera.Constants.Type.back);
+  const [cameraOn, setCameraOn] = React.useState(false);
+  const [scanned, setScanned] = React.useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await BarCodeScanner.requestPermissionsAsync();
+      setHasPermission(status === 'granted');
+    })();
+  }, []);
+
+  const handleBarCodeScanned = ({ type, data }) => {
+    setScanned(true);
+    alert(`UPC code: ${data}`);
+  };
+
+  if (hasPermission === null) {
+    return <View />;
+  }
+  if (hasPermission === false) {
+    return <Text>No access to camera</Text>;
+  }
+
+
 
   return (
     <SafeAreaView
@@ -517,6 +522,23 @@ export default function App() {
       }}
     >
       <StatusBar hidden />
+
+      <Overlay isVisible={cameraOn} overlayStyle={{ width: 300, height: 500 }}>
+        <View
+          style={{
+            flex: 1,
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+          }}>
+          <BarCodeScanner
+            onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
+            style={StyleSheet.absoluteFillObject}
+          />
+
+          {scanned && <Button title={'Tap to Scan Again'} onPress={() => setScanned(false)} />}
+        </View>
+      </Overlay>
+
       <View
         style={{
           flexDirection: "row",
@@ -682,11 +704,11 @@ export default function App() {
                 start: [1, 0],
                 end: [0.2, 0],
               }}
-              title="Instructions/Help"
+              title="Barcode Scan"
               titleStyle={{ color: "white", fontFamily: "Avenir-Light" }}
               chevron={{ color: "white" }}
               onPress={() => {
-                console.log("Help clicked");
+                setCameraOn(true);
               }}
             />
           </View>
