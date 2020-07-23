@@ -18,6 +18,9 @@
  - Tapping on the red shopping cart icon next to an item removes it from the list
  # Settings
  - Tap the "ListMaker" logo at the top to reveal the settings menu:
+ ### Barcode Scanner
+ - Add a missing item to the list using the built-in Barcode Scanner (Expo).
+ - The scanned UPC code is used to quickly retrieve the product data and add it to the list
  ### Dark Mode
   - The app can be switched between light and dark mode
  ### Reset Card index
