@@ -57,7 +57,7 @@ import AddProductButton from "./components/add-button.js";
 import PDFLib, { PDFDocument, PDFPage } from "react-native-pdf-lib";
 
 // Sample data from Loblaws Kanata (id=UPC code)
-const data = productJSON.data;
+//const data = productJSON.data;
 // Disale Expo warnings in the app
 console.disableYellowBox = true;
 // Items the user added to the grocery list
@@ -117,6 +117,15 @@ const GroceryCard = ({ card }) => (
 const keyExtractor = (item, index) => index.toString();
 // Keys to display when the list is exported
 const productKeys = ["Category", "Name", "Price", "QTY"];
+const productCategories = [
+  "Fruit-Veg",
+  "Bread",
+  "Meat",
+  "Dairy-Egg",
+  "Condiments",
+  "Snacks",
+  "Stationery",
+];
 // Card swiper/transition
 const swiperRef = React.createRef();
 const tableRef = React.createRef();
@@ -125,6 +134,31 @@ const transitionRef = React.createRef();
 let tableRows = [];
 
 export default function App() {
+  // load the local JSON in case fetching from S3 bucket fails
+  const [data, setData] = React.useState(productJSON.data);
+
+  // fetch product data from an S3 bucket
+  useEffect(() => {
+    // Start it off by assuming the component is still mounted
+    let mounted = true;
+
+    const loadData = async () => {
+      const response = await axios.get(
+        "http://vivek.kandathil.ca/files/products.json"
+      );
+      if (mounted) {
+        console.log(response.data.data)
+        setData(response.data.data);
+      }
+    };
+    loadData();
+
+    return () => {
+      // When cleanup is called, toggle the mounted variable to false
+      mounted = false;
+    };
+  }, []);
+
   // ---- STATE -----
   const [index, setIndex] = React.useState(0); // Card index
   const [settingsVisible, setSettingsVisible] = React.useState(false); // Card index
@@ -156,6 +190,7 @@ export default function App() {
   const [whatsAppTo, setWhatsAppTo] = React.useState("");
   // Table-Card view toggle button
   const [cardView, setCardView] = React.useState(false);
+  const [productData, setProductData] = React.useState([]);
   //-----------------
 
   // Data to display for the search results
@@ -228,25 +263,25 @@ export default function App() {
             />
           </View>
         ) : (
-          <View>
-            <Text style={{ fontFamily: "Avenir-Heavy", color: colors.red }}>
-              View Options
+            <View>
+              <Text style={{ fontFamily: "Avenir-Heavy", color: colors.red }}>
+                View Options
             </Text>
-            <Badge
-              status="success"
-              containerStyle={{ position: "absolute", top: -5, right: -5 }}
-              badgeStyle={{
-                backgroundColor: selectedItems.includes(item)
-                  ? "green"
-                  : "transparent",
-                borderColor: selectedItems.includes(item)
-                  ? "lawngreen"
-                  : "transparent",
-              }}
-              value={selectedItems.includes(item) ? "Added" : ""}
-            />
-          </View>
-        )
+              <Badge
+                status="success"
+                containerStyle={{ position: "absolute", top: -5, right: -5 }}
+                badgeStyle={{
+                  backgroundColor: selectedItems.includes(item)
+                    ? "green"
+                    : "transparent",
+                  borderColor: selectedItems.includes(item)
+                    ? "lawngreen"
+                    : "transparent",
+                }}
+                value={selectedItems.includes(item) ? "Added" : ""}
+              />
+            </View>
+          )
       }
     />
   );
@@ -284,6 +319,7 @@ export default function App() {
   };
   // Display the incrementor when the item is tapped
   const onTapCard = () => {
+    setProfileData(data[index]);
     setQuantity(1);
     setVisible(true);
 
@@ -375,21 +411,32 @@ export default function App() {
     return cost;
   };
   const generateEmail = () => {
-    let emailBody = "Here is your grocery list:\\n------------------------\\n";
+    let body = "Here is your grocery list:\\n---------------------\\n";
     let listIndex = 1;
-    selectedItems.forEach((item) => {
-      emailBody +=
-        listIndex.toString() +
-        ". " +
-        (categoryEnabled ? "[" + item.category + "]" : "") +
-        item.name +
-        " (x" +
-        item.quantity +
-        ")\\n";
-      listIndex++;
+    // Don't include a store if there aren't any selected items from that store
+    let storeList = sortStores();
+    storeList.forEach((store) => {
+      body += store + ":\\n-------------------\\n";
+      selectedItems.forEach((item) => {
+        if (item.store == store) {
+          body +=
+            listIndex.toString() +
+            ". " +
+            (categoryEnabled ? "[" + item.category + "]" : "") +
+            item.name +
+            " (x" +
+            item.quantity +
+            ")\\n";
+          listIndex++;
+        }
+      });
+      body += "\\n----------------------\\n";
     });
-    emailBody += "\\n(Generated by the ListMaker App!)";
-    return emailBody;
+    body +=
+      "This should cost around $" +
+      Math.round(calculateCost() * 1.13 * 100) / 100 +
+      " with HST\\n(Generated by the ListMaker App!)";
+    return body;
   };
   const generateWhatsApp = () => {
     let body = "*Here is your grocery list:*\n---------------------\n";
@@ -397,21 +444,36 @@ export default function App() {
     let storeList = sortStores();
     storeList.forEach((store) => {
       body += "*" + store + ":*\n";
-      selectedItems.forEach((item) => {
-        if (item.store == store) {
+
+      let storeCategories = [];
+      productCategories.forEach((category) => {
+        let byCategory = [];
+        selectedItems.forEach((item) => {
+          if (item.store == store && item.category == category) {
+            byCategory.push(item);
+          }
+        });
+        if (byCategory.length !== 0) {
+          storeCategories.push(byCategory);
+        }
+      });
+      storeCategories.forEach((category) => {
+        body += "*" + category[0].category + ":*\n";
+        category.forEach((item) => {
           body +=
-            "*" +
             listIndex.toString() +
-            "*" +
-            ". " +
+            ". *" +
             (categoryEnabled ? "[" + item.category + "]" : "") +
             item.name +
-            " _(x" +
+            "* _(x" +
             item.quantity +
             "_)\n";
           listIndex++;
-        }
+        });
+
+        body += "\n";
       });
+
       body += "\n----------------------\n";
     });
     body +=
@@ -527,7 +589,7 @@ export default function App() {
             />
           </DialogFooter>
         }
-        height={0.6}
+        height={0.57}
         width={0.8}
       >
         <DialogContent
@@ -575,7 +637,7 @@ export default function App() {
               activeScale={0.65}
               containerStyle={{ width: 200, margin: 5 }}
               linearGradientProps={{
-                colors: ["#ffe259", "#ffa751"],
+                colors: ["#8E2DE2", "#4A00E0"],
                 start: [1, 0],
                 end: [0.2, 0],
               }}
@@ -607,6 +669,24 @@ export default function App() {
                   ],
                   { cancelable: false }
                 );
+              }}
+            />
+            <ListItem
+              Component={TouchableScale}
+              friction={70} //
+              tension={100} // These props are passed to the parent component (here TouchableScale)
+              activeScale={0.65}
+              containerStyle={{ width: 200, margin: 5 }}
+              linearGradientProps={{
+                colors: ["#00B4DB", "#0083B0"],
+                start: [1, 0],
+                end: [0.2, 0],
+              }}
+              title="Instructions/Help"
+              titleStyle={{ color: "white", fontFamily: "Avenir-Light" }}
+              chevron={{ color: "white" }}
+              onPress={() => {
+                console.log("Help clicked");
               }}
             />
           </View>
@@ -846,9 +926,9 @@ export default function App() {
                       onPress={() => {
                         Linking.openURL(
                           "whatsapp://send?text=" +
-                            generateWhatsApp() +
-                            "&phone=1" +
-                            whatsAppTo
+                          generateWhatsApp() +
+                          "&phone=1" +
+                          whatsAppTo
                         );
                       }}
                       style={{ backgroundColor: colors.green }}
@@ -898,12 +978,17 @@ export default function App() {
               </Dialog>
             </View>
             <View style={{ height: 400 }}>
-              <ScrollView bounces={true}>
-                {selectedItems.length === 0 ? (
-                  <Text style={{ fontFamily: "Avenir-Light" }}>
-                    Your list is empty...
-                  </Text>
-                ) : !cardView ? (
+              {selectedItems.length === 0 ? (
+                <Text
+                  style={{
+                    fontFamily: "Avenir-Light",
+                    color: darkMode ? colors.white : colors.black,
+                  }}
+                >
+                  Your list is empty...
+                </Text>
+              ) : !cardView ? (
+                <ScrollView bounces={true}>
                   <Table
                     borderStyle={{
                       borderWidth: 1,
@@ -922,6 +1007,7 @@ export default function App() {
                         fontWeight: "bold",
                         textAlign: "center",
                         margin: 9,
+                        color: colors.white,
                       }}
                     />
                     {groceryList.map((rowData, index) => (
@@ -952,41 +1038,47 @@ export default function App() {
                       </TableWrapper>
                     ))}
                   </Table>
-                ) : (
-                  <FlatList
-                    data={selectedItems}
-                    renderItem={({ item }) => {
-                      return (
-                        <ListItem
-                          Component={TouchableScale}
-                          friction={90} //
-                          tension={100}
-                          activeScale={0.95}
-                          bottomDivider
-                          containerStyle={{
-                            width: 290,
-                            height: 45,
-                          }}
-                          leftAvatar={{
-                            rounded: true,
-                            source: { uri: item.image },
-                            height: 25,
-                            width: 25,
-                          }}
-                          title={item.name + " (" + item.quantity + ")"}
-                          titleStyle={{
-                            color: darkMode ? colors.white : colors.black,
-                            fontFamily: "Avenir-Light",
-                            fontSize: 16,
-                          }}
-                          chevron={{ color: "white" }}
-                        />
-                      );
-                    }}
-                    keyExtractor={(item) => item.id}
-                  />
-                )}
-              </ScrollView>
+                </ScrollView>
+              ) : (
+                    <FlatList
+                      data={selectedItems}
+                      renderItem={({ item }) => {
+                        return (
+                          <ListItem
+                            Component={TouchableScale}
+                            friction={90} //
+                            tension={100}
+                            activeScale={0.95}
+                            bottomDivider
+                            containerStyle={{
+                              width: 290,
+                              height: 55,
+                            }}
+                            leftAvatar={{
+                              rounded: true,
+                              source: { uri: item.image },
+                              height: 25,
+                              width: 25,
+                            }}
+                            title={item.name + " (" + item.quantity + ")"}
+                            titleStyle={{
+                              color: darkMode ? colors.white : colors.black,
+                              fontFamily: "Avenir-Light",
+                              fontSize: 16,
+                            }}
+                            chevron={{ color: "white" }}
+                            rightContainerStyle={{ justifyContent: "center" }}
+                            rightElement={
+                              <Text style={{ color: colors.red, fontSize: 16 }}>
+                                {item.price}
+                              </Text>
+                            }
+                          />
+                        );
+                      }}
+                      keyExtractor={(item) => item.id}
+                    />
+                  )}
             </View>
           </View>
           <View>
