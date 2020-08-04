@@ -58,6 +58,8 @@ import { Camera } from 'expo-camera';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import InstructionPopup from "./components/instructions.js";
+
 
 // Sample data from Loblaws Kanata (id=UPC code)
 //const data = productJSON.data;
@@ -194,6 +196,8 @@ export default function App() {
   // Table-Card view toggle button
   const [cardView, setCardView] = React.useState(false);
   const [productData, setProductData] = React.useState([]);
+  // Instructions
+  const [instructionsVisible, setInstructionsVisible] = React.useState(true);
   //-----------------
 
   // Data to display for the search results
@@ -288,10 +292,11 @@ export default function App() {
       }
     />
   );
+  const [movingBack, setMovingBack] = React.useState(false);
   // Moves to next item in the array with each swipe
   const onSwiped = () => {
     transitionRef.current.animateNextTransition();
-    setIndex((index + 1) % data.length);
+    setIndex(movingBack ? index : (index + 1) % data.length);
     // Check if the list is done and notify user if yes
     setEndPopup(index + 1 == data.length);
   };
@@ -380,7 +385,7 @@ export default function App() {
           end: [0.2, 0],
         }}
         title={data[index].name}
-        containerStyle={{ width: 300 }}
+        containerStyle={{ borderRadius: 20, width: 300 }}
         titleStyle={{
           color: "white",
           fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Medium",
@@ -555,7 +560,7 @@ export default function App() {
       }}
     >
       <StatusBar hidden />
-
+      <InstructionPopup data={data} />
       <Overlay isVisible={cameraOn} overlayStyle={{ width: 350, height: '90%' }}>
         <View style={{ flex: 1 }}>
           <View
@@ -1235,16 +1240,28 @@ export default function App() {
         footer={
           <DialogFooter>
             <DialogButton
-              text={
-                profileData.options === undefined
-                  ? "Set Quantity: " + quantity
-                  : "Set Flavour Quantities"
-              }
+              style={{ backgroundColor: colors.red }}
+              textStyle={{
+                color: colors.black,
+                fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+              }}
+              text={"Cancel"}
               onPress={() => {
                 setVisible(false);
+                setQuantity(1);
               }}
-              style={{ backgroundColor: colors.green }}
-              textStyle={{ color: colors.black }}
+            />
+            <AddProductButton
+              profileData={profileData}
+              colors={colors}
+              selectedItems={selectedItems}
+              onQuickAdded={onQuickAdded}
+              setListData={setListData}
+              setQuantity={setQuantity}
+              setFlavourQuantity={setFlavourQuantity}
+              setProfileVisible={setProfileVisible}
+              tableRows={tableRows}
+              quantity={quantity}
             />
           </DialogFooter>
         }
@@ -1252,7 +1269,7 @@ export default function App() {
         <DialogContent style={styles.popup}>
           <View style={{ marginTop: 20, marginBottom: 20 }}>
             <Profile
-              profileData={profileData}
+              profileData={data[index]}
               darkMode={darkMode}
               colors={colors}
               flavourQuantity={flavourQuantity}
@@ -1406,26 +1423,48 @@ export default function App() {
         </DialogContent>
       </Dialog>
       <View style={styles.topContainer}></View>
+      <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
+
+        <TouchableScale onPress={() => {
+          setMovingBack(true);
+          swiperRef.current.swipeBack();
+          setIndex((index - 1) % data.length);
+        }}>
+          <MaterialCommunityIcons name="arrow-left-bold-circle-outline" size={34} color={colors.red} />
+        </TouchableScale>
+        <Text
+          style={{
+            textAlign: "center",
+            fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+            fontSize: 26,
+            color: darkMode ? colors.white : colors.red,
+          }}
+        >
+          {index + 1}/{data.length}
+        </Text>
+        <TouchableScale onPress={() => {
+          setMovingBack(false);
+          swiperRef.current.swipeTop();
+        }}>
+          <MaterialCommunityIcons name="arrow-right-bold-circle-outline" size={34} color={colors.red} />
+        </TouchableScale>
+      </View>
       <View style={styles.swiperContainer}>
-        <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
-          <Text
-            style={{
-              textAlign: "center",
-              fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
-              fontSize: 26,
-              color: darkMode ? colors.white : colors.red,
-            }}
-          >
-            {index + 1}/{data.length}
-          </Text>
-        </View>
+
         <Swiper
           ref={swiperRef}
           cards={data}
           cardIndex={index}
           renderCard={(card) => <GroceryCard card={card} />}
-          onSwiped={onSwiped}
-          onSwipedRight={onSwipedRight}
+          onSwiped={() => {
+            setMovingBack(false);
+            onSwiped();
+          }}
+          onSwipedRight={() => {
+            setMovingBack(false);
+            onSwipedRight();
+
+          }}
           onTapCard={onTapCard}
           stackSize={2}
           stackScale={10}
@@ -1435,6 +1474,7 @@ export default function App() {
           disableBottomSwipe
           animateOverlayLabelsOpacity
           animateCardOpacity
+          swipeBackCard
           infinite
           backgroundColor={"transparent"}
           overlayLabels={{
@@ -1483,7 +1523,7 @@ export default function App() {
           <TouchableOpacity onPress={() => swiperRef.current.swipeLeft()}>
             <Image
               source={require("./assets/remove.png")}
-              style={{ height: 80, width: 80, marginRight: 20 }}
+              style={{ height: 70, width: 70, marginRight: 20, marginTop: 10 }}
             />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => swiperRef.current.swipeRight()}>
@@ -1509,14 +1549,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   swiperContainer: {
-    flex: 0.58,
+    flex: 0.6,
   },
   bottomContainer: {
     flex: 0.45,
     justifyContent: "space-evenly",
   },
   topContainer: {
-    flex: 0.01,
+    flex: 0.001,
     justifyContent: "center",
     alignItems: "center",
     marginTop: 10,
@@ -1541,6 +1581,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: colors.white,
+    marginTop: -35
   },
   text: {
     textAlign: "center",
