@@ -7,7 +7,6 @@ import {
   Image,
   SafeAreaView,
   YellowBox,
-  Button,
   FlatList,
   ScrollView,
   TouchableOpacity,
@@ -15,6 +14,7 @@ import {
   TextInput,
   Linking,
   Alert,
+  Platform,
 } from "react-native";
 import Swiper from "react-native-deck-swiper";
 import { MaterialCommunityIcons, Fontisto } from "@expo/vector-icons";
@@ -36,6 +36,7 @@ import {
   Header,
   Badge,
   Overlay,
+  Button,
   CheckBox,
 } from "react-native-elements";
 import TouchableScale from "react-native-touchable-scale";
@@ -55,6 +56,7 @@ import Profile from "./components/profile.js";
 import AddProductButton from "./components/add-button.js";
 import { Camera } from 'expo-camera';
 import { BarCodeScanner } from 'expo-barcode-scanner';
+import { LinearGradient } from 'expo-linear-gradient';
 
 
 // Sample data from Loblaws Kanata (id=UPC code)
@@ -208,7 +210,7 @@ export default function App() {
       }}
       titleStyle={{
         color: darkMode ? colors.white : colors.black,
-        fontFamily: "Avenir-Light",
+        fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
       }}
       title={item.name}
       leftAvatar={{
@@ -265,7 +267,7 @@ export default function App() {
           </View>
         ) : (
             <View>
-              <Text style={{ fontFamily: "Avenir-Heavy", color: colors.red }}>
+              <Text style={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Heavy", color: colors.red }}>
                 View Options
             </Text>
               <Badge
@@ -381,12 +383,12 @@ export default function App() {
         containerStyle={{ width: 300 }}
         titleStyle={{
           color: "white",
-          fontFamily: "Avenir-Medium",
+          fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Medium",
           fontSize: 30,
         }}
         subtitleStyle={{
           color: "white",
-          fontFamily: "Avenir-Light",
+          fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
           fontSize: 20,
         }}
         subtitle={
@@ -493,6 +495,35 @@ export default function App() {
   const [cameraOn, setCameraOn] = React.useState(false);
   const [scanned, setScanned] = React.useState(false);
 
+  const [barcode, setBarcode] = React.useState('');
+  const [barcodeResult, setBarcodeResult] = React.useState([]);
+  const [imageDialogVisible, setImageDialogVisible] = React.useState(false);
+
+  const [imageSearch, setImageSearch] = React.useState("");
+  const [searchResults, setSearchResults] = React.useState([]);
+
+  // fetch product data from a barcode lookup API
+  useEffect(() => {
+    // Start it off by assuming the component is still mounted
+    let mounted = true;
+
+    const loadData = async () => {
+      const response = await axios.get(
+        `https://api.upcdatabase.org/product/${barcode}?apikey=D0D211A4DA68BA3855C903441D3E78F1`
+      );
+      if (mounted) {
+        setBarcodeResult(response.data);
+        console.log(response.data);
+      }
+    };
+    loadData();
+
+    return () => {
+      // When cleanup is called, toggle the mounted variable to false
+      mounted = false;
+    };
+  }, [barcode]); // Empty array = nothing to watch > only run once
+
   useEffect(() => {
     (async () => {
       const { status } = await BarCodeScanner.requestPermissionsAsync();
@@ -502,6 +533,7 @@ export default function App() {
 
   const handleBarCodeScanned = ({ type, data }) => {
     setScanned(true);
+    setBarcode(data);
     alert(`UPC code: ${data}`);
   };
 
@@ -514,6 +546,7 @@ export default function App() {
 
 
 
+
   return (
     <SafeAreaView
       style={{
@@ -523,19 +556,93 @@ export default function App() {
     >
       <StatusBar hidden />
 
-      <Overlay isVisible={cameraOn} overlayStyle={{ width: 300, height: 500 }}>
-        <View
-          style={{
-            flex: 1,
-            flexDirection: 'column',
-            justifyContent: 'flex-end',
-          }}>
-          <BarCodeScanner
-            onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-            style={StyleSheet.absoluteFillObject}
-          />
+      <Overlay isVisible={cameraOn} overlayStyle={{ width: 350, height: '90%' }}>
+        <View style={{ flex: 1 }}>
+          <View
+            style={{
+              flex: 0.5,
+              flexDirection: 'column',
+              justifyContent: 'flex-end',
+            }}>
+            <BarCodeScanner
+              onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
+              style={StyleSheet.absoluteFillObject}
+            />
 
-          {scanned && <Button title={'Tap to Scan Again'} onPress={() => setScanned(false)} />}
+            {scanned && <Button title={'SCAN AGAIN'} linearGradientProps={{
+              colors: ['#dd1818', '#93291E'],
+              start: { x: 0, y: 0.5 },
+              end: { x: 1, y: 0.5 },
+            }} titleStyle={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light" }} onPress={() => setScanned(false)} />}
+          </View>
+
+          <TouchableScale onPress={() => {
+            alert('hello');
+          }} style={{ flex: 0.5, marginTop: 10, borderWidth: 2, padding: 10, borderRadius: 8, borderColor: "#990000" }}>
+            <Overlay
+              isVisible={imageDialogVisible}
+              onBackdropPress={() => setImageDialogVisible(false)}
+            >
+              <Text>Hello from Overlay!</Text>
+            </Overlay>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', margin: 10 }}>
+              <Text style={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", textAlign: 'center', fontSize: 16, marginTop: 10 }}>NAME: </Text>
+              <TextInput
+                style={{ height: 40, borderColor: "#990000", borderWidth: 1, borderWidth: 2, borderRadius: 10, color: colors.red, padding: 10, fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", backgroundColor: 'white', width: 240 }}
+                onChangeText={text => alert('hi')}
+                value={barcodeResult.title == "" ? barcodeResult.description : barcodeResult.title}
+              />
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
+              <Text style={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", textAlign: 'center', fontSize: 16, marginTop: 10 }}>PRICE: </Text>
+              <TextInput
+                style={{ height: 40, borderColor: "#990000", borderWidth: 1, borderWidth: 2, borderRadius: 10, color: colors.red, padding: 10, fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", backgroundColor: 'white', width: 240 }}
+                onChangeText={text => alert('hi')}
+                value={barcodeResult.msrp == "0.00" ? "" : barcodeResult.msrp}
+              />
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', margin: 10 }}>
+              <Text style={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", textAlign: 'center', fontSize: 16, marginTop: 10 }}>IMAGE: </Text>
+
+              <Button
+                ViewComponent={LinearGradient}
+                linearGradientProps={{
+                  colors: ['#dd1818', '#93291E'],
+                  start: { x: 0, y: 0.5 },
+                  end: { x: 1, y: 0.5 },
+                }}
+                buttonStyle={{ width: 100, height: 40 }}
+                title={"Custom URI"}
+                titleStyle={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", fontSize: 16 }}
+                onPress={() => {
+                  setImageDialogVisible(true);
+                }}
+              />
+              <Button
+                ViewComponent={LinearGradient}
+                linearGradientProps={{
+                  colors: ['#dd1818', '#93291E'],
+                  start: { x: 0, y: 0.5 },
+                  end: { x: 1, y: 0.5 },
+                }}
+                buttonStyle={{ width: 100, height: 40 }}
+                title={"Auto Search"}
+                titleStyle={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", fontSize: 16 }}
+                onPress={() => {
+                  const headers = {
+                    'Ocp-Apim-Subscription-Key': 'db989bd0507a44ad9f7f4899ad3d881a',
+                  };
+                  axios.get('https://api.cognitive.microsoft.com/bing/v7.0/images/search?q=monster+energy+drink+zero+ultra', { headers })
+                    .then(response => {
+                      setSearchResults(response.data.pivotSuggestions[1].suggestions);
+                      console.log(searchResults.length);
+                    });
+                }}
+              />
+            </View>
+            <Text style={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", fontSize: 16, color: colors.red }}>{barcodeResult.success ? "* Barcode lookup successful!\nPlease fill any missing details" : "* Barcode lookup failed (404).\nPlease scan again or fill in details manually"}</Text>
+          </TouchableScale>
+
         </View>
       </Overlay>
 
@@ -643,7 +750,7 @@ export default function App() {
                 end: [0.2, 0],
               }}
               title="Reset Card Stack"
-              titleStyle={{ color: "white", fontFamily: "Avenir-Light" }}
+              titleStyle={{ color: "white", fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light" }}
               chevron={{ color: "white" }}
               onPress={() => {
                 Haptics.notificationAsync(
@@ -664,7 +771,7 @@ export default function App() {
                 end: [0.2, 0],
               }}
               title="Clear Grocery List"
-              titleStyle={{ color: "white", fontFamily: "Avenir-Light" }}
+              titleStyle={{ color: "white", fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light" }}
               chevron={{ color: "white" }}
               onPress={() => {
                 Haptics.notificationAsync(
@@ -705,9 +812,10 @@ export default function App() {
                 end: [0.2, 0],
               }}
               title="Barcode Scan"
-              titleStyle={{ color: "white", fontFamily: "Avenir-Light" }}
+              titleStyle={{ color: "white", fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light" }}
               chevron={{ color: "white" }}
               onPress={() => {
+                setSettingsVisible(false)
                 setCameraOn(true);
               }}
             />
@@ -761,7 +869,7 @@ export default function App() {
               />
               <Text
                 style={{
-                  fontFamily: "Avenir-Light",
+                  fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
                   fontWeight: "bold",
                   textAlign: "center",
                   marginTop: 20,
@@ -1003,7 +1111,7 @@ export default function App() {
               {selectedItems.length === 0 ? (
                 <Text
                   style={{
-                    fontFamily: "Avenir-Light",
+                    fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
                     color: darkMode ? colors.white : colors.black,
                   }}
                 >
@@ -1025,7 +1133,7 @@ export default function App() {
                         backgroundColor: colors.red,
                       }}
                       textStyle={{
-                        fontFamily: "Avenir-Light",
+                        fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
                         fontWeight: "bold",
                         textAlign: "center",
                         margin: 9,
@@ -1051,7 +1159,7 @@ export default function App() {
                                 : cellData
                             }
                             textStyle={{
-                              fontFamily: "Avenir-Light",
+                              fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
                               textAlign: "center",
                               color: darkMode ? colors.white : colors.black,
                             }}
@@ -1085,7 +1193,7 @@ export default function App() {
                             title={item.name + " (" + item.quantity + ")"}
                             titleStyle={{
                               color: darkMode ? colors.white : colors.black,
-                              fontFamily: "Avenir-Light",
+                              fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
                               fontSize: 16,
                             }}
                             chevron={{ color: "white" }}
@@ -1109,7 +1217,7 @@ export default function App() {
                 color: darkMode ? colors.white : colors.black,
                 textAlign: "center",
                 marginTop: 10,
-                fontFamily: "Avenir-Light",
+                fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
               }}
             >
               Total Estimated Cost: ${Math.round(calculateCost() * 100) / 100} +
@@ -1227,7 +1335,7 @@ export default function App() {
             <SearchBar
               placeholder="Search for a Product..."
               onChangeText={updateSearch}
-              inputStyle={{ fontFamily: "Avenir-Light" }}
+              inputStyle={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light" }}
               value={search}
               lightMode={!darkMode}
               containerStyle={{
@@ -1251,7 +1359,7 @@ export default function App() {
                     style={{ backgroundColor: colors.red }}
                     textStyle={{
                       color: colors.black,
-                      fontFamily: "Avenir-Light",
+                      fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
                     }}
                     text={"Cancel"}
                     onPress={() => {
@@ -1303,7 +1411,7 @@ export default function App() {
           <Text
             style={{
               textAlign: "center",
-              fontFamily: "Avenir-Light",
+              fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
               fontSize: 26,
               color: darkMode ? colors.white : colors.red,
             }}
@@ -1321,6 +1429,7 @@ export default function App() {
           onTapCard={onTapCard}
           stackSize={2}
           stackScale={10}
+          useViewOverflow={Platform.OS === 'ios'}
           stackSeparation={14}
           disableTopSwipe
           disableBottomSwipe
@@ -1444,7 +1553,7 @@ const styles = StyleSheet.create({
     color: colors.white,
     backgroundColor: "transparent",
   },
-  text: { fontFamily: "Avenir-Light", fontSize: 33 },
+  text: { fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", fontSize: 33 },
   heading: { fontSize: 24, marginBottom: 10, color: colors.gray },
   price: { color: colors.purple, fontSize: 32, fontWeight: "500" },
 
@@ -1463,7 +1572,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   quantityStyle: {
-    fontFamily: "Avenir-Light",
+    fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
     textAlign: "center",
     fontWeight: "bold",
   },

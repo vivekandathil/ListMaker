@@ -46,7 +46,7 @@ const AddProductButton = ({
       style={{ backgroundColor: colors.green }}
       textStyle={{
         color: colors.black,
-        fontFamily: "Avenir-Light",
+        fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
       }}
       text={
         "Add " +
