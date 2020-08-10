@@ -138,9 +138,11 @@ const transitionRef = React.createRef();
 // Array of product information
 let tableRows = [];
 
+
 export default function App() {
   // load the local JSON in case fetching from S3 bucket fails
   const [data, setData] = React.useState(productJSON.data);
+
 
   // fetch product data from an S3 bucket
   useEffect(() => {
@@ -149,7 +151,7 @@ export default function App() {
 
     const loadData = async () => {
       const response = await axios.get(
-        "http://vivek.kandathil.ca/files/products.json"
+        "http://assets-vjk.s3.amazonaws.com/files/productData.json"
       );
       if (mounted) {
 
@@ -163,6 +165,7 @@ export default function App() {
       mounted = false;
     };
   }, []); // Empty array = nothing to watch > only run once
+
 
   // ---- STATE -----
   const [index, setIndex] = React.useState(0); // Card index
@@ -186,7 +189,7 @@ export default function App() {
   const [darkMode, setDarkMode] = React.useState(false);
   // Email dialog
   const [emailDialogVisible, setEmailDialogVisible] = React.useState(false);
-  const [categoryEnabled, setCategoryEnabled] = React.useState(false);
+  const [priceEnabled, setpriceEnabled] = React.useState(false);
   const [emailTo, setEmailTo] = React.useState("sample@gmail.com");
   // WhatsApp dialog
   const [whatsAppDialogVisible, setWhatsAppDialogVisible] = React.useState(
@@ -430,7 +433,7 @@ export default function App() {
           body +=
             listIndex.toString() +
             ". " +
-            (categoryEnabled ? "[" + item.category + "]" : "") +
+            (priceEnabled ? "[" + item.price + "]" : "") +
             item.name +
             " (x" +
             item.quantity +
@@ -450,15 +453,18 @@ export default function App() {
     let body = "*Here is your grocery list:*\n---------------------\n";
     let listIndex = 1;
     let storeList = sortStores();
+    console.log(selectedItems);
     storeList.forEach((store) => {
-      body += "*" + store + ":*\n";
+      body += "*" + store + ":*\n\n";
 
       let storeCategories = [];
       productCategories.forEach((category) => {
         let byCategory = [];
         selectedItems.forEach((item) => {
-          if (item.store == store && item.category == category) {
-            byCategory.push(item);
+          if (item.store === store) {
+            if (item.category === category || item.category === undefined) {
+              byCategory.push(item);
+            }
           }
         });
         if (byCategory.length !== 0) {
@@ -470,10 +476,10 @@ export default function App() {
         category.forEach((item) => {
           body +=
             listIndex.toString() +
-            ". *" +
-            (categoryEnabled ? "[" + item.category + "]" : "") +
+            ". " +
+            (priceEnabled ? "```[" + item.price + "]``` " : "") +
             item.name +
-            "* _(x" +
+            " _(x" +
             item.quantity +
             "_)\n";
           listIndex++;
@@ -1020,13 +1026,13 @@ export default function App() {
                       margin: 10,
                     }}
                   >
-                    <Text style={{ margin: 10 }}>Include category:</Text>
+                    <Text style={{ margin: 10 }}>Include price:</Text>
 
                     <Switch
                       trackColor={{ false: colors.red, true: colors.green }}
                       ios_backgroundColor="#3e3e3e"
-                      onValueChange={() => setCategoryEnabled(!categoryEnabled)}
-                      value={categoryEnabled}
+                      onValueChange={() => setpriceEnabled(!priceEnabled)}
+                      value={priceEnabled}
                     />
                   </View>
                 </DialogContent>
@@ -1100,13 +1106,13 @@ export default function App() {
                       margin: 10,
                     }}
                   >
-                    <Text style={{ margin: 10 }}>Include category:</Text>
+                    <Text style={{ margin: 10 }}>Include price:</Text>
 
                     <Switch
                       trackColor={{ false: colors.red, true: colors.green }}
                       ios_backgroundColor="#3e3e3e"
-                      onValueChange={() => setCategoryEnabled(!categoryEnabled)}
-                      value={categoryEnabled}
+                      onValueChange={() => setpriceEnabled(!priceEnabled)}
+                      value={priceEnabled}
                     />
                   </View>
                 </DialogContent>
@@ -1191,7 +1197,7 @@ export default function App() {
                             }}
                             leftAvatar={{
                               rounded: true,
-                              source: { uri: item.image },
+                              source: item.image && { uri: item.image },
                               height: 25,
                               width: 25,
                             }}
@@ -1211,7 +1217,7 @@ export default function App() {
                           />
                         );
                       }}
-                      keyExtractor={(item) => item.id}
+                      keyExtractor={(item) => item.id === undefined ? item.upc : item.id}
                     />
                   )}
             </View>
@@ -1255,13 +1261,17 @@ export default function App() {
               profileData={profileData}
               colors={colors}
               selectedItems={selectedItems}
-              onQuickAdded={onQuickAdded}
+              onQuickAdded={() => {
+                onQuickAdded();
+                swiperRef.current.swipeLeft();
+              }}
               setListData={setListData}
               setQuantity={setQuantity}
               setFlavourQuantity={setFlavourQuantity}
-              setProfileVisible={setProfileVisible}
+              setProfileVisible={setVisible}
               tableRows={tableRows}
               quantity={quantity}
+              swiperRef={swiperRef}
             />
           </DialogFooter>
         }

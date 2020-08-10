@@ -40,6 +40,7 @@ const AddProductButton = ({
   setProfileVisible,
   tableRows,
   quantity,
+  swiperRef,
 }) => {
   return (
     <DialogButton
@@ -63,8 +64,10 @@ const AddProductButton = ({
             if (flavour.quantity > 0) {
               const obj = {
                 upc: flavour.id,
+                category: profileData.category,
                 name: profileData.name + ": " + flavour.name,
                 price: flavour.price,
+                image: flavour.image,
                 quantity: flavour.quantity,
                 store: profileData.store,
               };
@@ -80,6 +83,9 @@ const AddProductButton = ({
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             }
           });
+        }
+        if (swiperRef !== undefined) {
+          swiperRef.current.swipeLeft();
         }
         setFlavourQuantity(0);
         setProfileVisible(false);

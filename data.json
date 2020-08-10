@@ -4,136 +4,849 @@
       "upc": "713733696142",
       "price": 1.99,
       "name": "Apple",
-      "description": "Pink Lady or Honeycrisp",
-      "image": "http://vivek.kandathil.ca/images/PinkLady.png",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/PinkLady.png",
       "category": "Fruit-Veg",
-      "quantity": 1
+      "quantity": 1,
+      "store": "Loblaws",
+      "options": {
+        "flavours": [
+          {
+            "id": 1,
+            "category": "Fruit-Veg",
+            "store": "Loblaws",
+            "price": 1.99,
+            "name": "Honeycrisp",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/PinkLady.png",
+            "quantity": 0
+          },
+          {
+            "id": 2,
+            "category": "Fruit-Veg",
+            "store": "Loblaws",
+            "price": 1.99,
+            "name": "Pink Lady",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/PinkLady.png",
+            "quantity": 0
+          },
+          {
+            "id": 3,
+            "category": "Fruit-Veg",
+            "store": "Loblaws",
+            "price": 1.99,
+            "name": "Ambrosia",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/PinkLady.png",
+            "quantity": 0
+          },
+          {
+            "id": 4,
+            "category": "Fruit-Veg",
+            "store": "Loblaws",
+            "price": 1.99,
+            "name": "McIntosh",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/PinkLady.png",
+            "quantity": 0
+          },
+          {
+            "id": 5,
+            "category": "Fruit-Veg",
+            "store": "Loblaws",
+            "price": 1.99,
+            "name": "Granny Smith",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/GrannySmith.png",
+            "quantity": 0
+          }
+        ]
+      }
     },
     {
       "upc": "021248000072",
       "price": 1.45,
       "name": "Banana",
       "description": "",
-      "image": "http://vivek.kandathil.ca/images/Banana.png",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Banana.png",
       "category": "Fruit-Veg",
-      "quantity": 1
+      "quantity": 1,
+      "store": "Loblaws"
     },
     {
       "upc": "715756100040",
       "price": 3.99,
       "name": "Raspberries",
       "description": "",
-      "image": "http://vivek.kandathil.ca/images/Raspberries.png",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Raspberries.png",
       "category": "Fruit-Veg",
-      "quantity": 1
+      "quantity": 1,
+      "store": "Loblaws"
     },
     {
       "upc": "715756300129",
       "price": 3.99,
       "name": "Blueberries",
       "description": "",
-      "image": "http://vivek.kandathil.ca/images/Blueberries.png",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Blueberries.png",
       "category": "Fruit-Veg",
-      "quantity": 1
-    },
-    {
-      "upc": "063100231545",
-      "price": 3.69,
-      "name": "Canned Chicken",
-      "description": "Maple Leaf Flakes of Chicken",
-      "image": "http://vivek.kandathil.ca/images/CannedChicken.png",
-      "category": "Meat",
-      "quantity": 1
-    },
-    {
-      "upc": "063100231538",
-      "price": 3.69,
-      "name": "Canned Turkey",
-      "description": "Maple Leaf Flakes of Turkey",
-      "image": "http://vivek.kandathil.ca/images/CannedTurkey.png",
-      "category": "Meat",
-      "quantity": 1
-    },
-    {
-      "upc": "025293001220",
-      "price": 3.99,
-      "name": "Silk Coconut Milk",
-      "description": "In the Allergy-Free section",
-      "image": "http://vivek.kandathil.ca/images/CoconutMilk.jpeg",
-      "category": "Dairy-Egg",
-      "quantity": 1
-    },
-    {
-      "upc": "818228940783",
-      "price": 59.99,
-      "name": "Proactiv Acne Treatment",
-      "description": "",
-      "image": "http://vivek.kandathil.ca/images/Proactiv.jpg",
-      "category": "Stationary",
-      "quantity": 1
-    },
-    {
-      "upc": "824862006235",
-      "price": 3.99,
-      "name": "Broccoli",
-      "description": "",
-      "image": "http://vivek.kandathil.ca/images/broccoli.png",
-      "category": "Fruit-Veg",
-      "quantity": 1
+      "quantity": 1,
+      "store": "Loblaws"
     },
     {
       "upc": "634740097671",
       "price": 3.99,
       "name": "Watermelon",
       "description": "",
-      "image": "http://vivek.kandathil.ca/images/watermelon.png",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/watermelon.png",
       "category": "Fruit-Veg",
-      "quantity": 1
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "20285555001",
+      "price": 8.79,
+      "name": "Grapes",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/GrapeSable.jpg",
+      "category": "Fruit-Veg",
+      "quantity": 1,
+      "store": "Loblaws",
+      "options": {
+        "flavours": [
+          {
+            "id": 11,
+            "price": 8.79,
+            "name": "Sable",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/BlackGrapes.png",
+            "quantity": 0
+          },
+          {
+            "id": 22,
+            "price": 8.79,
+            "name": "Pink Muscat",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/GreenGrapes.png",
+            "quantity": 0
+          },
+          {
+            "id": 33,
+            "price": 8.79,
+            "name": "Cotton Candy",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/GreenGrapes.png",
+            "quantity": 0
+          },
+          {
+            "id": 44,
+            "price": 8.79,
+            "name": "Autumn Crisp",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/GreenGrapes.png",
+            "quantity": 0
+          }
+        ]
+      }
     },
     {
       "upc": "012000162688",
       "price": 1.09,
       "name": "Lemon",
       "description": "",
-      "image": "http://vivek.kandathil.ca/images/lemon.jpg",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/lemon.jpg",
       "category": "Fruit-Veg",
-      "quantity": 1
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "98499393",
+      "price": 1.29,
+      "name": "Mango",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/mango.png",
+      "category": "Fruit-Veg",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "398998688",
+      "price": 4.68,
+      "name": "Tomato",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/tomato.jpg",
+      "category": "Fruit-Veg",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "787979796959",
+      "price": 1.15,
+      "name": "Ginger",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/ginger.jpg",
+      "category": "Fruit-Veg",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "824862006235",
+      "price": 3.99,
+      "name": "Broccoli",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/broccoli.png",
+      "category": "Fruit-Veg",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "827673893656789",
+      "price": 1.23,
+      "name": "Green Pepper",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/PepperGreen.jpg",
+      "category": "Fruit-Veg",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "765465675",
+      "price": 3.49,
+      "name": "Carrot",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/carrot.jpg",
+      "category": "Fruit-Veg",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "534565434567",
+      "price": 2.99,
+      "name": "Mushroom",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/mushroom.jpg",
+      "category": "Fruit-Veg",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "409257983502",
+      "price": 4.99,
+      "name": "Shredded Chicken",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/ShreddedChicken.png",
+      "category": "Meat",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "8376478237467",
+      "price": 8.00,
+      "name": "Chicken Thighs",
+      "description": "Bone-in",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/ChickenThigh.jpg",
+      "category": "Meat",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "987656782",
+      "price": 8.00,
+      "name": "Pork Ribs",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/PorkRibs.jpg",
+      "category": "Meat",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "063100231545",
+      "price": 16.00,
+      "name": "Canned Chicken",
+      "description": "Maple Leaf Flakes of Chicken",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/CannedChicken.png",
+      "category": "Meat",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "063100231538",
+      "price": 3.69,
+      "name": "Canned Turkey",
+      "description": "Maple Leaf Flakes of Turkey",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/CannedTurkey.png",
+      "category": "Meat",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "8323478237467",
+      "price": 7.79,
+      "name": "Chorizo",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Chorizo.jpg",
+      "category": "Meat",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "4647838392",
+      "price": 12.98,
+      "name": "Bacon",
+      "description": "Extra Thick Cut",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/bacon.jpg",
+      "category": "Meat",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "7584883940",
+      "price": 3.29,
+      "name": "Tuna Snacks",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/tunaclassic.jpg",
+      "category": "Meat",
+      "quantity": 5,
+      "store": "Loblaws",
+      "options": {
+        "flavours": [
+          {
+            "id": 111,
+            "price": 3.29,
+            "name": "Classic",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/tuna.jpg",
+            "quantity": 0
+          },
+          {
+            "id": 222,
+            "price": 3.29,
+            "name": "Spicy Thai Chili",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/tunaspicy.jpg",
+            "quantity": 0
+          },
+          {
+            "id": 333,
+            "price": 3.29,
+            "name": "Olive Oil",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/tunaoliveoil.jpg",
+            "quantity": 0
+          }
+        ]
+      }
+    },
+    {
+      "upc": "564783",
+      "price": 18.99,
+      "name": "Cashews",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/cashew.jpg",
+      "category": "Meat",
+      "quantity": 1,
+      "store": "Farm Boy"
+    },
+    {
+      "upc": "025293001220",
+      "price": 3.99,
+      "name": "Silk Coconut Milk",
+      "description": "In the Allergy-Free section",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/CoconutMilk.jpeg",
+      "category": "Dairy-Egg",
+      "quantity": 1,
+      "store": "Loblaws"
     },
     {
       "upc": "070810084255",
       "price": 3.69,
       "name": "Lemon Juice",
       "description": "RealLemon 100% Juice",
-      "image": "http://vivek.kandathil.ca/images/lemonjuice.png",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/lemonjuice.png",
       "category": "Juice",
-      "quantity": 1
+      "quantity": 1,
+      "store": "Loblaws"
     },
     {
       "upc": "2940148902393",
       "price": 7.99,
-      "name": "Pulp & Press Hulk",
+      "name": "Pulp and Press",
       "description": "",
-      "image": "http://vivek.kandathil.ca/images/PulpPressHulk.png",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/PulpPressHulk.png",
       "category": "Juice",
-      "quantity": 1
+      "quantity": 1,
+      "store": "Farm Boy",
+      "options": {
+        "flavours": [
+          {
+            "id": 1,
+            "price": 7.99,
+            "name": "Hulk",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/PulpPressHulk.png",
+            "quantity": 0
+          },
+          {
+            "id": 2,
+            "price": 7.99,
+            "name": "Red Monster",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/PulpPressRed.png",
+            "quantity": 0
+          },
+          {
+            "id": 3,
+            "price": 7.99,
+            "name": "Lemon Sherbet",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/PulpPressLemon.png",
+            "quantity": 0
+          },
+          {
+            "id": 4,
+            "price": 7.99,
+            "name": "Spicy Lemon",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/PulpPressSpicyLemon.png",
+            "quantity": 0
+          }
+        ]
+      }
     },
     {
-      "upc": "0312091257",
-      "price": 7.99,
-      "name": "Pulp & Press Red Monster",
-      "description": "",
-      "image": "http://vivek.kandathil.ca/images/PulpPressRed.png",
+      "upc": "87654323456789",
+      "price": 2.89,
+      "name": "Beef Broth",
+      "description": "Campbell's",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/pho.png",
       "category": "Juice",
-      "quantity": 1
+      "quantity": 1,
+      "store": "Loblaws"
     },
     {
-      "upc": "2940162121367",
-      "price": 7.99,
-      "name": "Pulp & Press Lemon Sherbet",
+      "upc": "7265367289",
+      "price": 7.29,
+      "name": "Canola Oil",
       "description": "",
-      "image": "http://vivek.kandathil.ca/images/PulpPressLemon.png",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/canola.jpeg",
+      "category": "Condiments",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "985463782",
+      "price": 4.19,
+      "name": "Barbecue Sauce",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/BBQ.jpg",
+      "category": "Condiments",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "98345677463728",
+      "price": 29.99,
+      "name": "Protein Powder",
+      "description": "Diesel New Zealand",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Protein.jpg",
+      "category": "Condiments",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "066589106564",
+      "price": 5.59,
+      "name": "Neilson Milk",
+      "description": "Neilson 3.25%",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/MilkNeilson.jpg",
+      "category": "Dairy-Egg",
+      "quantity": 1,
+      "store": "Loblaws",
+      "options": {
+        "flavours": [
+          {
+            "id": 1,
+            "price": 3.59,
+            "name": "Carton",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/MilkNeilson.jpg",
+            "quantity": 0
+          },
+          {
+            "id": 2,
+            "price": 3.59,
+            "name": "Bag",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/MilkBag.png",
+            "quantity": 0
+          }
+        ]
+      }
+    },
+    {
+      "upc": "856209005274",
+      "price": 4.39,
+      "name": "Eggs",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Eggs.png",
+      "category": "Dairy-Egg",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "49398939292",
+      "price": 1.99,
+      "name": "Chicken Soup",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/chickennoodlesoup.jpg",
+      "category": "Condiments",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "3748378378329738",
+      "price": 0.99,
+      "name": "Parle-G",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/parleg.jpg",
+      "category": "Snacks",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "20251602",
+      "price": 4.29,
+      "name": "12-Grain Bread",
+      "description": "Dempsters",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Dempsters12Grain.png",
+      "category": "Bread",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "5654345654",
+      "price": 3.49,
+      "name": "Hamburger Buns",
+      "description": "Dempsters or D'Italiano",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/bun.jpg",
+      "category": "Bread",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "20353446",
+      "price": 4.29,
+      "name": "Kolbassa",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Kolbassa.png",
+      "category": "Meat",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "20039581005",
+      "price": 4.99,
+      "name": "Peanut Butter",
+      "description": "Crunchy",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/PeanutButter.png",
+      "category": "Condiments",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "9737827637",
+      "price": 7.99,
+      "name": "Instant Coffee",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/CoffeeRich.jpg",
       "category": "Juice",
-      "quantity": 1
+      "quantity": 1,
+      "store": "Loblaws",
+      "options": {
+        "flavours": [
+          {
+            "id": 40378,
+            "price": 7.99,
+            "name": "Rich",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/CoffeeRich.jpg",
+            "quantity": 0,
+            "store": "Loblaws"
+          },
+          {
+            "id": 40379,
+            "price": 7.99,
+            "name": "Instant with Chickory",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/CoffeeChickory.jpg",
+            "quantity": 0,
+            "store": "Loblaws"
+          },
+          {
+            "id": 40400,
+            "price": 7.99,
+            "name": "Decaf",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/CoffeeDecaf.jpg",
+            "quantity": 0,
+            "store": "Loblaws"
+          }
+        ]
+      }
+    },
+    {
+      "upc": "546383839",
+      "price": 3.49,
+      "name": "Pasta Sauce",
+      "description": "Classico Sweet Basil Marinara",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/sauce.jpg",
+      "category": "Condiments",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "783897537988",
+      "price": 2.99,
+      "name": "Marshmallow",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Marshmallow.jpg",
+      "category": "Snacks",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "9837990270940",
+      "price": 2.69,
+      "name": "Crumpets",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Crumpet.jpg",
+      "category": "Bread",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "67868589",
+      "price": 3.19,
+      "name": "Spaghetti",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/spaghetti.jpg",
+      "category": "Bread",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "20297564002",
+      "price": 3.99,
+      "name": "V8 V-Go Cans",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/v8.jpg",
+      "category": "Juice",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "938389229",
+      "price": 9.99,
+      "name": "Matcha Tea",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Matcha.png",
+      "category": "Juice",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "20159690001",
+      "price": 7.83,
+      "name": "Washington Cherries",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Cherries.png",
+      "category": "Fruit-Veg",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "21205496",
+      "price": 7.99,
+      "name": "Loop Juice",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/LoopMorningGlory.jpg",
+      "category": "Juice",
+      "quantity": 1,
+      "store": "Loblaws",
+      "options": {
+        "flavours": [
+          {
+            "id": 1,
+            "price": 7.99,
+            "name": "Morning Glory",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/LoopMorningGlory.jpg",
+            "quantity": 0
+          },
+          {
+            "id": 2,
+            "price": 7.99,
+            "name": "Better Together",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/LoopBetterTogether.jpg",
+            "quantity": 0
+          },
+          {
+            "id": 3,
+            "price": 7.99,
+            "name": "Spring Break",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/LoopSpringBreak.jpg",
+            "quantity": 0
+          },
+          {
+            "id": 4,
+            "price": 7.99,
+            "name": "Top Notch",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/LoopTopNotch.jpg",
+            "quantity": 0
+          }
+        ]
+      }
+    },
+    {
+      "upc": "2883939272",
+      "price": 5.49,
+      "name": "Ice Cream Mochi",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/StrawberryMochi.jpg",
+      "category": "Snacks",
+      "quantity": 1,
+      "store": "Loblaws",
+      "options": {
+        "flavours": [
+          {
+            "id": 1,
+            "price": 5.49,
+            "name": "Strawberry",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/StrawberryMochi.jpg",
+            "quantity": 0
+          },
+          {
+            "id": 2,
+            "price": 5.49,
+            "name": "Salted Caramel",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/SaltedCaramelMochi.jpg",
+            "quantity": 0
+          },
+          {
+            "id": 3,
+            "price": 5.49,
+            "name": "Vanilla",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/VanillaMochi.jpg",
+            "quantity": 0
+          },
+          {
+            "id": 4,
+            "price": 5.49,
+            "name": "Mint",
+            "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/MintMochi.jpg",
+            "quantity": 0
+          }
+        ]
+      }
+    },
+    {
+      "upc": "762111948311",
+      "price": 7.99,
+      "name": "Tazo Chai Latte Mix",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Tazo.jpg",
+      "category": "Juice",
+      "quantity": 1,
+      "store": "Shoppers"
+    },
+    {
+      "upc": "21193815",
+      "price": 7.99,
+      "name": "Beyond Meat Burger",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/BeyondMeatBurger.jpg",
+      "category": "Meat",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "099836872790",
+      "price": 12.95,
+      "name": "Aqua Fresh Toothpaste",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/AquaFresh.jpg",
+      "category": "Stationery",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "87239890729874",
+      "price": 1.47,
+      "name": "Softsoap",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Softsoap.jpeg",
+      "category": "Stationery",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "818228940783",
+      "price": 59.99,
+      "name": "Proactiv Acne Treatment",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Proactiv.jpg",
+      "category": "Stationery",
+      "quantity": 1,
+      "store": "Showcase"
+    },
+    {
+      "upc": "20347155002",
+      "price": 12.79,
+      "name": "Eco-Max Laundry Detergent",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Ecomax.png",
+      "category": "Stationery",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "065743085080",
+      "price": 4.47,
+      "name": "Down Under Shampoo",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/DownUnderFortify.jpg",
+      "category": "Stationery",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "989989989959",
+      "price": 2.5,
+      "name": "Dishwasher Detergent",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/detergent.jpg",
+      "category": "Stationery",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "363793282829",
+      "price": 14.99,
+      "name": "Finish Detergent Tabs",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/tabs.jpg",
+      "category": "Stationery",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "547838393982",
+      "price": 3.49,
+      "name": "Parchment Paper",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/parchment.jpg",
+      "category": "Stationery",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "498324798732",
+      "price": 4.99,
+      "name": "Live Clean Soap",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Soap.jpg",
+      "category": "Stationery",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "98779873974",
+      "price": 8.99,
+      "name": "Lubriderm",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Lubriderm.jpg",
+      "category": "Stationery",
+      "quantity": 1,
+      "store": "Loblaws"
     }
   ]
 }
