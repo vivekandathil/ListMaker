@@ -17,7 +17,7 @@ import {
   Platform,
 } from "react-native";
 import Swiper from "react-native-deck-swiper";
-import { MaterialCommunityIcons, Fontisto } from "@expo/vector-icons";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { Transitioning, Transition } from "react-native-reanimated";
 import Dialog, {
   DialogContent,
@@ -59,14 +59,15 @@ import { BarCodeScanner } from 'expo-barcode-scanner';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import InstructionPopup from "./components/instructions.js";
+import AnimatedEllipsis from 'react-native-animated-ellipsis';
 
+import * as Print from "expo-print";
+import * as MediaLibrary from "expo-media-library";
+import * as Sharing from "expo-sharing";
 
-// Sample data from Loblaws Kanata (id=UPC code)
-//const data = productJSON.data;
-// Disale Expo warnings in the app
-console.disableYellowBox = true;
-// Items the user added to the grocery list
-let selectedItems = [];
+//import MessageDialog from './components/message-settings-dialog';
+// <MessageDialog generateSMS={generateSMS} visible={SMSDialogVisible} styles={styles} setVisible={setSMSDialogVisible}/>
+
 // Colour references
 const colors = {
   red: "#e52d27",
@@ -79,6 +80,134 @@ const colors = {
   purple: "#9b5de5",
   dark: "#1a1a1a",
 };
+
+function htmlString() {
+  return (`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grocery List</title>
+    <h1><b>Groceries</b> for ${new Date().toJSON().slice(0,10).replace(/-/g,'/')}</h1>
+    <style>
+    @page { margin: 20px; } 
+        h1 {
+            text-align: center;
+            font-family: Avenir;
+            font-weight: normal;
+        }
+        h3 {
+          text-align: center;
+          font-family: Avenir-Light;
+          font-weight: normal;
+        }
+        h4 {
+          text-align: center;
+          font-family: Avenir-Light;
+          font-weight: normal;
+        }
+        #products {
+          font-family: "Avenir-Light", Avenir-Light, Avenir-Light, sans-serif;
+          border-collapse: collapse;
+          font-size: 12px;
+          font-weight: normal;
+          width: 100%;
+          align-items: center;
+        }
+        
+        #products td, #products th {
+          border: 1px solid #ddd;
+          padding: 8px;
+          
+        }
+        
+        #products tr:nth-child(even){background-color: white;}
+        
+        #products th {
+          padding-top: 12px;
+          padding-bottom: 12px;
+          text-align: center;
+          background-color: ${colors.red};
+          color: white;
+        }
+
+        #tableContainer {
+          width: 100% ;
+          margin-left: auto ;
+          margin-right: auto ;
+        }
+    </style>
+   
+</head>
+<body>
+<div id="tableContainer">
+<table id="products">
+  <tr>
+    <th>Category</th>
+    <th>Name</th>
+    <th>Price</th>
+    <th>Qty.</th>
+  </tr>
+  ${generateRows()}
+</table>
+</div>
+<h3>Approximate Cost: \$${Math.round(calculateCost() * 100) / 100} +
+\$${Math.round(calculateCost() * 0.13 * 100) / 100} HST</h3>
+</body>
+</html>
+`)
+};
+
+const createPDF = async (html) => {
+
+  try {
+    const { uri } = await Print.printToFileAsync({ html });
+    if (Platform.OS === "ios") {
+      await Sharing.shareAsync(uri);
+    } else {
+      const permission = await MediaLibrary.requestPermissionsAsync();
+      if (permission.granted) {
+        await MediaLibrary.createAssetAsync(uri);
+      }
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+
+// Sample data from Loblaws Kanata (id=UPC code)
+//const data = productJSON.data;
+// Disale Expo warnings in the app
+console.disableYellowBox = true;
+// Items the user added to the grocery list
+let selectedItems = [];
+
+// Generate the HTML for table rows in the PDF
+function generateRows() {
+  let htmlRows = "";
+  selectedItems.forEach((item) => {
+    htmlRows += `
+    <tr>
+      <td>${item.category}</td>
+      <td>${item.name}</td>
+      <td>\$${item.price.toString()}</td>
+      <td>${item.quantity.toString()}</td>
+    </tr>
+    `
+  })
+  return htmlRows;
+}
+
+const calculateCost = () => {
+  let cost = 0;
+  selectedItems.forEach((item) => {
+    cost += item.price * item.quantity;
+  });
+  return cost;
+};
+
 // Card swipe transitions
 const duration = 200;
 const transition = (
@@ -128,6 +257,7 @@ const productCategories = [
   "Meat",
   "Dairy-Egg",
   "Condiments",
+  "Juice",
   "Snacks",
   "Stationery",
 ];
@@ -151,7 +281,7 @@ export default function App() {
 
     const loadData = async () => {
       const response = await axios.get(
-        "http://assets-vjk.s3.amazonaws.com/files/productData.json"
+        "http://assets-vjk.s3.amazonaws.com/files/data.json"
       );
       if (mounted) {
 
@@ -196,6 +326,8 @@ export default function App() {
     false
   );
   const [whatsAppTo, setWhatsAppTo] = React.useState("");
+  // SMS dialog
+  const [SMSDialogVisible, setSMSDialogVisible] = React.useState(false);
   // Table-Card view toggle button
   const [cardView, setCardView] = React.useState(false);
   const [productData, setProductData] = React.useState([]);
@@ -400,7 +532,7 @@ export default function App() {
           fontSize: 20,
         }}
         subtitle={
-          data[index].price +
+          data[index].price.toString() +
           (data[index].options === undefined
             ? ""
             : " - " + data[index].options.flavours.length + " options/flavours")
@@ -414,13 +546,6 @@ export default function App() {
       />
     </View>
   );
-  const calculateCost = () => {
-    let cost = 0;
-    selectedItems.forEach((item) => {
-      cost += item.price * item.quantity;
-    });
-    return cost;
-  };
   const generateEmail = () => {
     let body = "Here is your grocery list:\\n---------------------\\n";
     let listIndex = 1;
@@ -433,7 +558,7 @@ export default function App() {
           body +=
             listIndex.toString() +
             ". " +
-            (priceEnabled ? "[" + item.price + "]" : "") +
+            (priceEnabled ? "[" + item.price.toString() + "]" : "") +
             item.name +
             " (x" +
             item.quantity +
@@ -447,6 +572,53 @@ export default function App() {
       "This should cost around $" +
       Math.round(calculateCost() * 1.13 * 100) / 100 +
       " with HST\\n(Generated by the ListMaker App!)";
+    return body;
+  };
+  const generateSMS = () => {
+    let body = "Here is your grocery list:\n---------------------\n";
+    let listIndex = 1;
+    let storeList = sortStores();
+    console.log(selectedItems);
+    storeList.forEach((store) => {
+      body += store + ":\n\n";
+
+      let storeCategories = [];
+      productCategories.forEach((category) => {
+        let byCategory = [];
+        selectedItems.forEach((item) => {
+          if (item.store === store) {
+            if (item.category === category || item.category === undefined) {
+              byCategory.push(item);
+            }
+          }
+        });
+        if (byCategory.length !== 0) {
+          storeCategories.push(byCategory);
+        }
+      });
+      storeCategories.forEach((category) => {
+        body += category[0].category + ":\n";
+        category.forEach((item) => {
+          body +=
+            listIndex.toString() +
+            ". " +
+            (priceEnabled ? "[" + item.price.toString() + "]" : "") +
+            item.name +
+            " (x" +
+            item.quantity +
+            ")\n";
+          listIndex++;
+        });
+
+        body += "\n";
+      });
+
+      body += "\n----------------------\n";
+    });
+    body +=
+      "This should cost around $" +
+      Math.round(calculateCost() * 1.13 * 100) / 100 +
+      " with HST\n(Generated by the ListMaker App!)";
     return body;
   };
   const generateWhatsApp = () => {
@@ -477,7 +649,7 @@ export default function App() {
           body +=
             listIndex.toString() +
             ". " +
-            (priceEnabled ? "```[" + item.price + "]``` " : "") +
+            (priceEnabled ? "```[" + item.price.toString() + "]``` " : "") +
             item.name +
             " _(x" +
             item.quantity +
@@ -594,7 +766,7 @@ export default function App() {
               isVisible={imageDialogVisible}
               onBackdropPress={() => setImageDialogVisible(false)}
             >
-              <Text>Hello from Overlay!</Text>
+              <Text>Currently Unavailable</Text>
             </Overlay>
             <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', margin: 10 }}>
               <Text style={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", textAlign: 'center', fontSize: 16, marginTop: 10 }}>NAME: </Text>
@@ -653,7 +825,11 @@ export default function App() {
             </View>
             <Text style={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", fontSize: 16, color: colors.red }}>{barcodeResult.success ? "* Barcode lookup successful!\nPlease fill any missing details" : "* Barcode lookup failed (404).\nPlease scan again or fill in details manually"}</Text>
           </TouchableScale>
-
+          <TouchableScale style={{margin: 4}} onPress={() => {
+              setCameraOn(false);
+          }}>
+            <MaterialCommunityIcons name="keyboard-return" size={44} color={colors.red} />
+          </TouchableScale>
         </View>
       </Overlay>
 
@@ -922,18 +1098,18 @@ export default function App() {
                 activeOpacity={0.3}
                 color={"red"}
                 onPress={() => {
-                  console.log("pdf");
+                  createPDF(htmlString());
                 }}
               />
               <MaterialCommunityIcons.Button
-                name="file-excel"
+                name="message-text-outline"
                 size={44}
                 backgroundColor="transparent"
                 underlayColor="transparent"
                 activeOpacity={0.3}
-                color={"green"}
+                color={'red'}
                 onPress={() => {
-                  alert("exported to Excel (not really)");
+                  setSMSDialogVisible(true);
                 }}
               />
               <MaterialCommunityIcons.Button
@@ -942,7 +1118,7 @@ export default function App() {
                 backgroundColor="transparent"
                 underlayColor="transparent"
                 activeOpacity={0.3}
-                color={"lawngreen"}
+                color={"red"}
                 onPress={() => {
                   setWhatsAppDialogVisible(true);
                 }}
@@ -953,7 +1129,7 @@ export default function App() {
                 backgroundColor="transparent"
                 underlayColor="transparent"
                 activeOpacity={0.3}
-                color={"deepskyblue"}
+                color={"red"}
                 onPress={() => {
                   setEmailDialogVisible(true);
                 }}
@@ -1117,17 +1293,28 @@ export default function App() {
                   </View>
                 </DialogContent>
               </Dialog>
+              
             </View>
             <View style={{ height: 400 }}>
               {selectedItems.length === 0 ? (
+                <View>
                 <Text
                   style={{
                     fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
                     color: darkMode ? colors.white : colors.black,
                   }}
                 >
-                  Your list is empty...
+                  Your list is empty. Add some products!
+                  
                 </Text>
+                <AnimatedEllipsis numberOfDots={8}
+                  animationDelay={150}
+                  style={{
+                    color: 'red',
+                    fontSize: 30,
+                  }}
+/>
+                </ View>
               ) : !cardView ? (
                 <ScrollView bounces={true}>
                   <Table
@@ -1211,7 +1398,7 @@ export default function App() {
                             rightContainerStyle={{ justifyContent: "center" }}
                             rightElement={
                               <Text style={{ color: colors.red, fontSize: 16 }}>
-                                {item.price}
+                                {item.price.toString()}
                               </Text>
                             }
                           />

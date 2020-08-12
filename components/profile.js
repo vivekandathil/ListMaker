@@ -36,7 +36,7 @@ const Profile = ({
       >
         {profileData.name} {profileData.name.endsWith("s") ? "are" : "is"} in
         the {profileData.category} category and cost
-        {profileData.name.endsWith("s") ? "" : "s"} ${profileData.price} per
+        {profileData.name.endsWith("s") ? "" : "s"} ${profileData.price.toString()} per
         unit. Found at {profileData.store}
         {profileData.options == null
           ? "."

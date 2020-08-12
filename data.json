@@ -368,28 +368,28 @@
       "options": {
         "flavours": [
           {
-            "id": 1,
+            "id": 1743890,
             "price": 7.99,
             "name": "Hulk",
             "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/PulpPressHulk.png",
             "quantity": 0
           },
           {
-            "id": 2,
+            "id": 238678,
             "price": 7.99,
             "name": "Red Monster",
             "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/PulpPressRed.png",
             "quantity": 0
           },
           {
-            "id": 3,
+            "id": 393876782,
             "price": 7.99,
             "name": "Lemon Sherbet",
             "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/PulpPressLemon.png",
             "quantity": 0
           },
           {
-            "id": 4,
+            "id": 4938767,
             "price": 7.99,
             "name": "Spicy Lemon",
             "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/PulpPressSpicyLemon.png",
@@ -656,28 +656,28 @@
       "options": {
         "flavours": [
           {
-            "id": 1,
+            "upc": 16378,
             "price": 7.99,
             "name": "Morning Glory",
             "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/LoopMorningGlory.jpg",
             "quantity": 0
           },
           {
-            "id": 2,
+            "id": 2567,
             "price": 7.99,
             "name": "Better Together",
             "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/LoopBetterTogether.jpg",
             "quantity": 0
           },
           {
-            "id": 3,
+            "id": 35678,
             "price": 7.99,
             "name": "Spring Break",
             "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/LoopSpringBreak.jpg",
             "quantity": 0
           },
           {
-            "id": 4,
+            "id": 4837,
             "price": 7.99,
             "name": "Top Notch",
             "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/LoopTopNotch.jpg",
@@ -844,6 +844,16 @@
       "name": "Lubriderm",
       "description": "",
       "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Lubriderm.jpg",
+      "category": "Stationery",
+      "quantity": 1,
+      "store": "Loblaws"
+    },
+    {
+      "upc": "9283746789",
+      "price": 5.29,
+      "name": "Windex",
+      "description": "",
+      "image": "https://assets-vjk.s3.ca-central-1.amazonaws.com/images/Windex.jpg",
       "category": "Stationery",
       "quantity": 1,
       "store": "Loblaws"

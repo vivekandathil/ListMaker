@@ -63,7 +63,7 @@ const AddProductButton = ({
           profileData.options.flavours.forEach((flavour) => {
             if (flavour.quantity > 0) {
               const obj = {
-                upc: flavour.id,
+                upc: flavour.id.toString(),
                 category: profileData.category,
                 name: profileData.name + ": " + flavour.name,
                 price: flavour.price,
