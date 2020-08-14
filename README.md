@@ -3,6 +3,7 @@
 
 ![](v4.gif) ![](listedit.jpeg) ![](darkmode.gif)
 
+## iOS Download (TestFlight): https://testflight.apple.com/join/sPEu4v8P
 ## Demo Video: https://www.youtube.com/watch?v=ASktNijdeEI
 
 # Simplified grocery list generator:
