@@ -64,6 +64,7 @@ import AnimatedEllipsis from 'react-native-animated-ellipsis';
 import * as Print from "expo-print";
 import * as MediaLibrary from "expo-media-library";
 import * as Sharing from "expo-sharing";
+import { keys } from "./keys.js";
 
 //import MessageDialog from './components/message-settings-dialog';
 // <MessageDialog generateSMS={generateSMS} visible={SMSDialogVisible} styles={styles} setVisible={setSMSDialogVisible}/>
@@ -532,7 +533,7 @@ export default function App() {
           fontSize: 20,
         }}
         subtitle={
-          data[index].price.toString() +
+          "$" + data[index].price.toString() +
           (data[index].options === undefined
             ? ""
             : " - " + data[index].options.flavours.length + " options/flavours")
@@ -692,7 +693,7 @@ export default function App() {
 
     const loadData = async () => {
       const response = await axios.get(
-        `https://api.upcdatabase.org/product/${barcode}?apikey=D0D211A4DA68BA3855C903441D3E78F1`
+        `https://api.upcdatabase.org/product/${barcode}?apikey=${keys.upcAPI}`
       );
       if (mounted) {
         setBarcodeResult(response.data);
@@ -813,7 +814,7 @@ export default function App() {
                 titleStyle={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", fontSize: 16 }}
                 onPress={() => {
                   const headers = {
-                    'Ocp-Apim-Subscription-Key': 'db989bd0507a44ad9f7f4899ad3d881a',
+                    'Ocp-Apim-Subscription-Key': keys.bing,
                   };
                   axios.get('https://api.cognitive.microsoft.com/bing/v7.0/images/search?q=monster+energy+drink+zero+ultra', { headers })
                     .then(response => {
