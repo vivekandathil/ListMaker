@@ -44,9 +44,13 @@ const AddProductButton = ({
 }) => {
   return (
     <DialogButton
-      style={{ backgroundColor: colors.green }}
+      style={{
+        backgroundColor: colors.red,
+        borderWidth: 1,
+        borderColor: "#ff6666",
+      }}
       textStyle={{
-        color: colors.black,
+        color: "white",
         fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
       }}
       text={

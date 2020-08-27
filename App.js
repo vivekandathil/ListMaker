@@ -54,20 +54,27 @@ import Communications from "react-native-communications";
 import axios from "axios";
 import Profile from "./components/profile.js";
 import AddProductButton from "./components/add-button.js";
-import { Camera } from 'expo-camera';
-import { BarCodeScanner } from 'expo-barcode-scanner';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Camera } from "expo-camera";
+import { BarCodeScanner } from "expo-barcode-scanner";
+import { LinearGradient } from "expo-linear-gradient";
 
 import InstructionPopup from "./components/instructions.js";
-import AnimatedEllipsis from 'react-native-animated-ellipsis';
+import AnimatedEllipsis from "react-native-animated-ellipsis";
 
-import * as Print from "expo-print";
-import * as MediaLibrary from "expo-media-library";
-import * as Sharing from "expo-sharing";
 import { keys } from "./keys.js";
 
-//import MessageDialog from './components/message-settings-dialog';
-// <MessageDialog generateSMS={generateSMS} visible={SMSDialogVisible} styles={styles} setVisible={setSMSDialogVisible}/>
+import { RNS3 } from "react-native-aws3";
+
+import * as FileSystem from "expo-file-system";
+import AWS from "aws-sdk/dist/aws-sdk-react-native";
+
+import { htmlString } from "./components/create-html-string";
+import { createPDF } from "./components/create-pdf";
+import {
+  generateEmail,
+  generateWhatsApp,
+  generateSMS,
+} from "./components/generate-messages";
 
 // Colour references
 const colors = {
@@ -82,124 +89,31 @@ const colors = {
   dark: "#1a1a1a",
 };
 
-function htmlString() {
-  return (`
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grocery List</title>
-    <h1><b>Groceries</b> for ${new Date().toJSON().slice(0,10).replace(/-/g,'/')}</h1>
-    <style>
-    @page { margin: 20px; } 
-        h1 {
-            text-align: center;
-            font-family: Avenir;
-            font-weight: normal;
-        }
-        h3 {
-          text-align: center;
-          font-family: Avenir-Light;
-          font-weight: normal;
-        }
-        h4 {
-          text-align: center;
-          font-family: Avenir-Light;
-          font-weight: normal;
-        }
-        #products {
-          font-family: "Avenir-Light", Avenir-Light, Avenir-Light, sans-serif;
-          border-collapse: collapse;
-          font-size: 12px;
-          font-weight: normal;
-          width: 100%;
-          align-items: center;
-        }
-        
-        #products td, #products th {
-          border: 1px solid #ddd;
-          padding: 8px;
-          
-        }
-        
-        #products tr:nth-child(even){background-color: white;}
-        
-        #products th {
-          padding-top: 12px;
-          padding-bottom: 12px;
-          text-align: center;
-          background-color: ${colors.red};
-          color: white;
-        }
-
-        #tableContainer {
-          width: 100% ;
-          margin-left: auto ;
-          margin-right: auto ;
-        }
-    </style>
-   
-</head>
-<body>
-<div id="tableContainer">
-<table id="products">
-  <tr>
-    <th>Category</th>
-    <th>Name</th>
-    <th>Price</th>
-    <th>Qty.</th>
-  </tr>
-  ${generateRows()}
-</table>
-</div>
-<h3>Approximate Cost: \$${Math.round(calculateCost() * 100) / 100} +
-\$${Math.round(calculateCost() * 0.13 * 100) / 100} HST</h3>
-</body>
-</html>
-`)
+const config = {
+  bucket: "assets-vjk",
+  keyPrefix: "grocery-lists/",
+  region: "ca-central-1",
+  accessKey: keys.s3ID,
+  secretKey: keys.s3Secret,
 };
 
-const createPDF = async (html) => {
+const s3 = new AWS.S3({
+  region: config.region,
+  credentials: {
+    accessKeyId: config.accessKey,
+    secretAccessKey: config.secretKey,
+  },
+});
 
-  try {
-    const { uri } = await Print.printToFileAsync({ html });
-    if (Platform.OS === "ios") {
-      await Sharing.shareAsync(uri);
-    } else {
-      const permission = await MediaLibrary.requestPermissionsAsync();
-      if (permission.granted) {
-        await MediaLibrary.createAssetAsync(uri);
-      }
-    }
-  } catch (error) {
-    console.error(error);
-  }
+const params = {
+  Bucket: config.bucket,
+  Prefix: "grocery-lists/",
 };
 
-
-// Sample data from Loblaws Kanata (id=UPC code)
-//const data = productJSON.data;
 // Disale Expo warnings in the app
 console.disableYellowBox = true;
 // Items the user added to the grocery list
 let selectedItems = [];
-
-// Generate the HTML for table rows in the PDF
-function generateRows() {
-  let htmlRows = "";
-  selectedItems.forEach((item) => {
-    htmlRows += `
-    <tr>
-      <td>${item.category}</td>
-      <td>${item.name}</td>
-      <td>\$${item.price.toString()}</td>
-      <td>${item.quantity.toString()}</td>
-    </tr>
-    `
-  })
-  return htmlRows;
-}
 
 const calculateCost = () => {
   let cost = 0;
@@ -252,16 +166,7 @@ const GroceryCard = ({ card }) => (
 const keyExtractor = (item, index) => index.toString();
 // Keys to display when the list is exported
 const productKeys = ["Category", "Name", "Price", "QTY"];
-const productCategories = [
-  "Fruit-Veg",
-  "Bread",
-  "Meat",
-  "Dairy-Egg",
-  "Condiments",
-  "Juice",
-  "Snacks",
-  "Stationery",
-];
+
 // Card swiper/transition
 const swiperRef = React.createRef();
 const tableRef = React.createRef();
@@ -269,11 +174,38 @@ const transitionRef = React.createRef();
 // Array of product information
 let tableRows = [];
 
-
 export default function App() {
   // load the local JSON in case fetching from S3 bucket fails
   const [data, setData] = React.useState(productJSON.data);
 
+  const [loadedList, setLoadedList] = React.useState([]);
+
+  useEffect(() => {
+    if (loadedList !== undefined && loadedList.length !== 0) {
+      loadedList.forEach((product) => {
+        selectedItems.push(product);
+        tableRows.push([
+          product.category,
+          product.name,
+          product.price,
+          product.quantity,
+        ]);
+        setListData(tableRows);
+      });
+    }
+  }, [loadedList]);
+
+  // Gte all saved lists from the S3 bucket when the app loads
+  useEffect(() => {
+    s3.listObjectsV2(params, function (err, data) {
+      if (err) console.log(err, err.stack);
+      // an error occurred
+      else {
+        setSavedLists(data.Contents);
+        console.log(savedLists);
+      } // successful response
+    });
+  }, []);
 
   // fetch product data from an S3 bucket
   useEffect(() => {
@@ -282,10 +214,9 @@ export default function App() {
 
     const loadData = async () => {
       const response = await axios.get(
-        "http://assets-vjk.s3.amazonaws.com/files/data.json"
+        "http://assets-vjk.s3.amazonaws.com/files/productData.json"
       );
       if (mounted) {
-
         setData(response.data.data);
       }
     };
@@ -296,7 +227,6 @@ export default function App() {
       mounted = false;
     };
   }, []); // Empty array = nothing to watch > only run once
-
 
   // ---- STATE -----
   const [index, setIndex] = React.useState(0); // Card index
@@ -334,6 +264,7 @@ export default function App() {
   const [productData, setProductData] = React.useState([]);
   // Instructions
   const [instructionsVisible, setInstructionsVisible] = React.useState(true);
+  const [savedLists, setSavedLists] = React.useState([]);
   //-----------------
 
   // Data to display for the search results
@@ -368,29 +299,6 @@ export default function App() {
       rightElement={
         item.options === undefined ? (
           <View>
-            <NumericInput
-              onChange={(value) => {
-                item.quantity = value;
-                setQuantity(value);
-              }}
-              totalWidth={80}
-              totalHeight={40}
-              iconSize={25}
-              step={1}
-              valueType="real"
-              rounded
-              textColor={darkMode ? colors.white : "#000"}
-              iconStyle={{ color: darkMode ? colors.dark : colors.white }}
-              rightButtonBackgroundColor={colors.red}
-              leftButtonBackgroundColor={colors.redLeft}
-              containerStyle={{
-                backgroundColor: darkMode ? "#404040" : colors.white,
-              }}
-              maxValue={10}
-              minValue={1}
-              initValue={1}
-              borderColor={darkMode ? colors.dark : colors.white}
-            />
             <Badge
               status="success"
               containerStyle={{ position: "absolute", top: -5, right: -5 }}
@@ -406,25 +314,31 @@ export default function App() {
             />
           </View>
         ) : (
-            <View>
-              <Text style={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Heavy", color: colors.red }}>
-                View Options
+          <View>
+            <Text
+              style={{
+                fontFamily:
+                  Platform.OS === "android" ? "Roboto" : "Avenir-Heavy",
+                color: colors.red,
+              }}
+            >
+              View Options
             </Text>
-              <Badge
-                status="success"
-                containerStyle={{ position: "absolute", top: -5, right: -5 }}
-                badgeStyle={{
-                  backgroundColor: selectedItems.includes(item)
-                    ? "green"
-                    : "transparent",
-                  borderColor: selectedItems.includes(item)
-                    ? "lawngreen"
-                    : "transparent",
-                }}
-                value={selectedItems.includes(item) ? "Added" : ""}
-              />
-            </View>
-          )
+            <Badge
+              status="success"
+              containerStyle={{ position: "absolute", top: -5, right: -5 }}
+              badgeStyle={{
+                backgroundColor: selectedItems.includes(item)
+                  ? "green"
+                  : "transparent",
+                borderColor: selectedItems.includes(item)
+                  ? "lawngreen"
+                  : "transparent",
+              }}
+              value={selectedItems.includes(item) ? "Added" : ""}
+            />
+          </View>
+        )
       }
     />
   );
@@ -533,7 +447,8 @@ export default function App() {
           fontSize: 20,
         }}
         subtitle={
-          "$" + data[index].price.toString() +
+          "$" +
+          data[index].price.toString() +
           (data[index].options === undefined
             ? ""
             : " - " + data[index].options.flavours.length + " options/flavours")
@@ -547,144 +462,20 @@ export default function App() {
       />
     </View>
   );
-  const generateEmail = () => {
-    let body = "Here is your grocery list:\\n---------------------\\n";
-    let listIndex = 1;
-    // Don't include a store if there aren't any selected items from that store
-    let storeList = sortStores();
-    storeList.forEach((store) => {
-      body += store + ":\\n-------------------\\n";
-      selectedItems.forEach((item) => {
-        if (item.store == store) {
-          body +=
-            listIndex.toString() +
-            ". " +
-            (priceEnabled ? "[" + item.price.toString() + "]" : "") +
-            item.name +
-            " (x" +
-            item.quantity +
-            ")\\n";
-          listIndex++;
-        }
-      });
-      body += "\\n----------------------\\n";
-    });
-    body +=
-      "This should cost around $" +
-      Math.round(calculateCost() * 1.13 * 100) / 100 +
-      " with HST\\n(Generated by the ListMaker App!)";
-    return body;
-  };
-  const generateSMS = () => {
-    let body = "Here is your grocery list:\n---------------------\n";
-    let listIndex = 1;
-    let storeList = sortStores();
-    console.log(selectedItems);
-    storeList.forEach((store) => {
-      body += store + ":\n\n";
-
-      let storeCategories = [];
-      productCategories.forEach((category) => {
-        let byCategory = [];
-        selectedItems.forEach((item) => {
-          if (item.store === store) {
-            if (item.category === category || item.category === undefined) {
-              byCategory.push(item);
-            }
-          }
-        });
-        if (byCategory.length !== 0) {
-          storeCategories.push(byCategory);
-        }
-      });
-      storeCategories.forEach((category) => {
-        body += category[0].category + ":\n";
-        category.forEach((item) => {
-          body +=
-            listIndex.toString() +
-            ". " +
-            (priceEnabled ? "[" + item.price.toString() + "]" : "") +
-            item.name +
-            " (x" +
-            item.quantity +
-            ")\n";
-          listIndex++;
-        });
-
-        body += "\n";
-      });
-
-      body += "\n----------------------\n";
-    });
-    body +=
-      "This should cost around $" +
-      Math.round(calculateCost() * 1.13 * 100) / 100 +
-      " with HST\n(Generated by the ListMaker App!)";
-    return body;
-  };
-  const generateWhatsApp = () => {
-    let body = "*Here is your grocery list:*\n---------------------\n";
-    let listIndex = 1;
-    let storeList = sortStores();
-    console.log(selectedItems);
-    storeList.forEach((store) => {
-      body += "*" + store + ":*\n\n";
-
-      let storeCategories = [];
-      productCategories.forEach((category) => {
-        let byCategory = [];
-        selectedItems.forEach((item) => {
-          if (item.store === store) {
-            if (item.category === category || item.category === undefined) {
-              byCategory.push(item);
-            }
-          }
-        });
-        if (byCategory.length !== 0) {
-          storeCategories.push(byCategory);
-        }
-      });
-      storeCategories.forEach((category) => {
-        body += "*" + category[0].category + ":*\n";
-        category.forEach((item) => {
-          body +=
-            listIndex.toString() +
-            ". " +
-            (priceEnabled ? "```[" + item.price.toString() + "]``` " : "") +
-            item.name +
-            " _(x" +
-            item.quantity +
-            "_)\n";
-          listIndex++;
-        });
-
-        body += "\n";
-      });
-
-      body += "\n----------------------\n";
-    });
-    body +=
-      "This should cost around $" +
-      Math.round(calculateCost() * 1.13 * 100) / 100 +
-      " with HST\n(Generated by the ListMaker App!)";
-    return body;
-  };
-  const sortStores = () => {
-    // Get a list of all the unique stores in theselected items
-    return [...new Set(selectedItems.map((item) => item.store))];
-  };
 
   const [hasPermission, setHasPermission] = React.useState(null);
   const [type, setType] = React.useState(Camera.Constants.Type.back);
   const [cameraOn, setCameraOn] = React.useState(false);
   const [scanned, setScanned] = React.useState(false);
 
-  const [barcode, setBarcode] = React.useState('');
+  const [barcode, setBarcode] = React.useState("");
   const [barcodeResult, setBarcodeResult] = React.useState([]);
   const [imageDialogVisible, setImageDialogVisible] = React.useState(false);
 
   const [imageSearch, setImageSearch] = React.useState("");
   const [searchResults, setSearchResults] = React.useState([]);
+
+  const [filename, setFilename] = React.useState("list.json");
 
   // fetch product data from a barcode lookup API
   useEffect(() => {
@@ -711,7 +502,7 @@ export default function App() {
   useEffect(() => {
     (async () => {
       const { status } = await BarCodeScanner.requestPermissionsAsync();
-      setHasPermission(status === 'granted');
+      setHasPermission(status === "granted");
     })();
   }, []);
 
@@ -728,9 +519,6 @@ export default function App() {
     return <Text>No access to camera</Text>;
   }
 
-
-
-
   return (
     <SafeAreaView
       style={{
@@ -739,65 +527,169 @@ export default function App() {
       }}
     >
       <StatusBar hidden />
-      <InstructionPopup data={data} />
-      <Overlay isVisible={cameraOn} overlayStyle={{ width: 350, height: '90%' }}>
+      <InstructionPopup
+        data={data}
+        savedLists={savedLists}
+        setLoadedList={setLoadedList}
+      />
+      <Overlay
+        isVisible={cameraOn}
+        overlayStyle={{ width: 350, height: "90%" }}
+      >
         <View style={{ flex: 1 }}>
           <View
             style={{
               flex: 0.5,
-              flexDirection: 'column',
-              justifyContent: 'flex-end',
-            }}>
+              flexDirection: "column",
+              justifyContent: "flex-end",
+            }}
+          >
             <BarCodeScanner
               onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
               style={StyleSheet.absoluteFillObject}
             />
 
-            {scanned && <Button title={'SCAN AGAIN'} linearGradientProps={{
-              colors: ['#dd1818', '#93291E'],
-              start: { x: 0, y: 0.5 },
-              end: { x: 1, y: 0.5 },
-            }} titleStyle={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light" }} onPress={() => setScanned(false)} />}
+            {scanned && (
+              <Button
+                title={"SCAN AGAIN"}
+                linearGradientProps={{
+                  colors: ["#dd1818", "#93291E"],
+                  start: { x: 0, y: 0.5 },
+                  end: { x: 1, y: 0.5 },
+                }}
+                titleStyle={{
+                  fontFamily:
+                    Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+                }}
+                onPress={() => setScanned(false)}
+              />
+            )}
           </View>
 
-          <TouchableScale onPress={() => {
-            alert('hello');
-          }} style={{ flex: 0.5, marginTop: 10, borderWidth: 2, padding: 10, borderRadius: 8, borderColor: "#990000" }}>
+          <TouchableScale
+            onPress={() => {
+              alert("hello");
+            }}
+            style={{
+              flex: 0.5,
+              marginTop: 10,
+              borderWidth: 2,
+              padding: 10,
+              borderRadius: 8,
+              borderColor: "#990000",
+            }}
+          >
             <Overlay
               isVisible={imageDialogVisible}
               onBackdropPress={() => setImageDialogVisible(false)}
             >
               <Text>Currently Unavailable</Text>
             </Overlay>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', margin: 10 }}>
-              <Text style={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", textAlign: 'center', fontSize: 16, marginTop: 10 }}>NAME: </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-evenly",
+                margin: 10,
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily:
+                    Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+                  textAlign: "center",
+                  fontSize: 16,
+                  marginTop: 10,
+                }}
+              >
+                NAME:{" "}
+              </Text>
               <TextInput
-                style={{ height: 40, borderColor: "#990000", borderWidth: 1, borderWidth: 2, borderRadius: 10, color: colors.red, padding: 10, fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", backgroundColor: 'white', width: 240 }}
-                onChangeText={text => alert('hi')}
-                value={barcodeResult.title == "" ? barcodeResult.description : barcodeResult.title}
+                style={{
+                  height: 40,
+                  borderColor: "#990000",
+                  borderWidth: 1,
+                  borderWidth: 2,
+                  borderRadius: 10,
+                  color: colors.red,
+                  padding: 10,
+                  fontFamily:
+                    Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+                  backgroundColor: "white",
+                  width: 240,
+                }}
+                onChangeText={(text) => alert("hi")}
+                value={
+                  barcodeResult.title == ""
+                    ? barcodeResult.description
+                    : barcodeResult.title
+                }
               />
             </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-evenly' }}>
-              <Text style={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", textAlign: 'center', fontSize: 16, marginTop: 10 }}>PRICE: </Text>
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-evenly" }}
+            >
+              <Text
+                style={{
+                  fontFamily:
+                    Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+                  textAlign: "center",
+                  fontSize: 16,
+                  marginTop: 10,
+                }}
+              >
+                PRICE:{" "}
+              </Text>
               <TextInput
-                style={{ height: 40, borderColor: "#990000", borderWidth: 1, borderWidth: 2, borderRadius: 10, color: colors.red, padding: 10, fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", backgroundColor: 'white', width: 240 }}
-                onChangeText={text => alert('hi')}
+                style={{
+                  height: 40,
+                  borderColor: "#990000",
+                  borderWidth: 1,
+                  borderWidth: 2,
+                  borderRadius: 10,
+                  color: colors.red,
+                  padding: 10,
+                  fontFamily:
+                    Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+                  backgroundColor: "white",
+                  width: 240,
+                }}
+                onChangeText={(text) => alert("hi")}
                 value={barcodeResult.msrp == "0.00" ? "" : barcodeResult.msrp}
               />
             </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', margin: 10 }}>
-              <Text style={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", textAlign: 'center', fontSize: 16, marginTop: 10 }}>IMAGE: </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-evenly",
+                margin: 10,
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily:
+                    Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+                  textAlign: "center",
+                  fontSize: 16,
+                  marginTop: 10,
+                }}
+              >
+                IMAGE:{" "}
+              </Text>
 
               <Button
                 ViewComponent={LinearGradient}
                 linearGradientProps={{
-                  colors: ['#dd1818', '#93291E'],
+                  colors: ["#dd1818", "#93291E"],
                   start: { x: 0, y: 0.5 },
                   end: { x: 1, y: 0.5 },
                 }}
                 buttonStyle={{ width: 100, height: 40 }}
                 title={"Custom URI"}
-                titleStyle={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", fontSize: 16 }}
+                titleStyle={{
+                  fontFamily:
+                    Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+                  fontSize: 16,
+                }}
                 onPress={() => {
                   setImageDialogVisible(true);
                 }}
@@ -805,31 +697,59 @@ export default function App() {
               <Button
                 ViewComponent={LinearGradient}
                 linearGradientProps={{
-                  colors: ['#dd1818', '#93291E'],
+                  colors: ["#dd1818", "#93291E"],
                   start: { x: 0, y: 0.5 },
                   end: { x: 1, y: 0.5 },
                 }}
                 buttonStyle={{ width: 100, height: 40 }}
                 title={"Auto Search"}
-                titleStyle={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", fontSize: 16 }}
+                titleStyle={{
+                  fontFamily:
+                    Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+                  fontSize: 16,
+                }}
                 onPress={() => {
                   const headers = {
-                    'Ocp-Apim-Subscription-Key': keys.bing,
+                    "Ocp-Apim-Subscription-Key": keys.bing,
                   };
-                  axios.get('https://api.cognitive.microsoft.com/bing/v7.0/images/search?q=monster+energy+drink+zero+ultra', { headers })
-                    .then(response => {
-                      setSearchResults(response.data.pivotSuggestions[1].suggestions);
+                  axios
+                    .get(
+                      "https://api.cognitive.microsoft.com/bing/v7.0/images/search?q=monster+energy+drink+zero+ultra",
+                      { headers }
+                    )
+                    .then((response) => {
+                      setSearchResults(
+                        response.data.pivotSuggestions[1].suggestions
+                      );
                       console.log(searchResults.length);
                     });
                 }}
               />
             </View>
-            <Text style={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", fontSize: 16, color: colors.red }}>{barcodeResult.success ? "* Barcode lookup successful!\nPlease fill any missing details" : "* Barcode lookup failed (404).\nPlease scan again or fill in details manually"}</Text>
+            <Text
+              style={{
+                fontFamily:
+                  Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+                fontSize: 16,
+                color: colors.red,
+              }}
+            >
+              {barcodeResult.success
+                ? "* Barcode lookup successful!\nPlease fill any missing details"
+                : "* Barcode lookup failed (404).\nPlease scan again or fill in details manually"}
+            </Text>
           </TouchableScale>
-          <TouchableScale style={{margin: 4}} onPress={() => {
+          <TouchableScale
+            style={{ margin: 4 }}
+            onPress={() => {
               setCameraOn(false);
-          }}>
-            <MaterialCommunityIcons name="keyboard-return" size={44} color={colors.red} />
+            }}
+          >
+            <MaterialCommunityIcons
+              name="keyboard-return"
+              size={44}
+              color={colors.red}
+            />
           </TouchableScale>
         </View>
       </Overlay>
@@ -938,7 +858,11 @@ export default function App() {
                 end: [0.2, 0],
               }}
               title="Reset Card Stack"
-              titleStyle={{ color: "white", fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light" }}
+              titleStyle={{
+                color: "white",
+                fontFamily:
+                  Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+              }}
               chevron={{ color: "white" }}
               onPress={() => {
                 Haptics.notificationAsync(
@@ -959,7 +883,11 @@ export default function App() {
                 end: [0.2, 0],
               }}
               title="Clear Grocery List"
-              titleStyle={{ color: "white", fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light" }}
+              titleStyle={{
+                color: "white",
+                fontFamily:
+                  Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+              }}
               chevron={{ color: "white" }}
               onPress={() => {
                 Haptics.notificationAsync(
@@ -1000,10 +928,14 @@ export default function App() {
                 end: [0.2, 0],
               }}
               title="Barcode Scan"
-              titleStyle={{ color: "white", fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light" }}
+              titleStyle={{
+                color: "white",
+                fontFamily:
+                  Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+              }}
               chevron={{ color: "white" }}
               onPress={() => {
-                setSettingsVisible(false)
+                setSettingsVisible(false);
                 setCameraOn(true);
               }}
             />
@@ -1057,7 +989,8 @@ export default function App() {
               />
               <Text
                 style={{
-                  fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+                  fontFamily:
+                    Platform.OS === "android" ? "Roboto" : "Avenir-Light",
                   fontWeight: "bold",
                   textAlign: "center",
                   marginTop: 20,
@@ -1099,7 +1032,7 @@ export default function App() {
                 activeOpacity={0.3}
                 color={"red"}
                 onPress={() => {
-                  createPDF(htmlString());
+                  createPDF(htmlString(selectedItems, calculateCost));
                 }}
               />
               <MaterialCommunityIcons.Button
@@ -1108,7 +1041,7 @@ export default function App() {
                 backgroundColor="transparent"
                 underlayColor="transparent"
                 activeOpacity={0.3}
-                color={'red'}
+                color={"red"}
                 onPress={() => {
                   setSMSDialogVisible(true);
                 }}
@@ -1157,7 +1090,11 @@ export default function App() {
                           null,
                           null,
                           "Grocery List",
-                          generateEmail()
+                          generateEmail(
+                            selectedItems,
+                            calculateCost,
+                            priceEnabled
+                          )
                         );
                       }}
                       style={{ backgroundColor: colors.green }}
@@ -1244,9 +1181,13 @@ export default function App() {
                       onPress={() => {
                         Linking.openURL(
                           "whatsapp://send?text=" +
-                          generateWhatsApp() +
-                          "&phone=1" +
-                          whatsAppTo
+                            generateWhatsApp(
+                              selectedItems,
+                              calculateCost,
+                              priceEnabled
+                            ) +
+                            "&phone=1" +
+                            whatsAppTo
                         );
                       }}
                       style={{ backgroundColor: colors.green }}
@@ -1294,28 +1235,28 @@ export default function App() {
                   </View>
                 </DialogContent>
               </Dialog>
-              
             </View>
-            <View style={{ height: 400 }}>
+            <View style={{ height: 350 }}>
               {selectedItems.length === 0 ? (
                 <View>
-                <Text
-                  style={{
-                    fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
-                    color: darkMode ? colors.white : colors.black,
-                  }}
-                >
-                  Your list is empty. Add some products!
-                  
-                </Text>
-                <AnimatedEllipsis numberOfDots={8}
-                  animationDelay={150}
-                  style={{
-                    color: 'red',
-                    fontSize: 30,
-                  }}
-/>
-                </ View>
+                  <Text
+                    style={{
+                      fontFamily:
+                        Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+                      color: darkMode ? colors.white : colors.black,
+                    }}
+                  >
+                    Your list is empty. Add some products!
+                  </Text>
+                  <AnimatedEllipsis
+                    numberOfDots={8}
+                    animationDelay={150}
+                    style={{
+                      color: "red",
+                      fontSize: 30,
+                    }}
+                  />
+                </View>
               ) : !cardView ? (
                 <ScrollView bounces={true}>
                   <Table
@@ -1332,7 +1273,8 @@ export default function App() {
                         backgroundColor: colors.red,
                       }}
                       textStyle={{
-                        fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+                        fontFamily:
+                          Platform.OS === "android" ? "Roboto" : "Avenir-Light",
                         fontWeight: "bold",
                         textAlign: "center",
                         margin: 9,
@@ -1358,7 +1300,10 @@ export default function App() {
                                 : cellData
                             }
                             textStyle={{
-                              fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+                              fontFamily:
+                                Platform.OS === "android"
+                                  ? "Roboto"
+                                  : "Avenir-Light",
                               textAlign: "center",
                               color: darkMode ? colors.white : colors.black,
                             }}
@@ -1369,54 +1314,140 @@ export default function App() {
                   </Table>
                 </ScrollView>
               ) : (
-                    <FlatList
-                      data={selectedItems}
-                      renderItem={({ item }) => {
-                        return (
-                          <ListItem
-                            Component={TouchableScale}
-                            friction={90} //
-                            tension={100}
-                            activeScale={0.95}
-                            bottomDivider
-                            containerStyle={{
-                              width: 290,
-                              height: 55,
-                            }}
-                            leftAvatar={{
-                              rounded: true,
-                              source: item.image && { uri: item.image },
-                              height: 25,
-                              width: 25,
-                            }}
-                            title={item.name + " (" + item.quantity + ")"}
-                            titleStyle={{
-                              color: darkMode ? colors.white : colors.black,
-                              fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
-                              fontSize: 16,
-                            }}
-                            chevron={{ color: "white" }}
-                            rightContainerStyle={{ justifyContent: "center" }}
-                            rightElement={
-                              <Text style={{ color: colors.red, fontSize: 16 }}>
-                                {item.price.toString()}
-                              </Text>
-                            }
-                          />
-                        );
-                      }}
-                      keyExtractor={(item) => item.id === undefined ? item.upc : item.id}
-                    />
-                  )}
+                <FlatList
+                  data={selectedItems}
+                  renderItem={({ item }) => {
+                    return (
+                      <ListItem
+                        Component={TouchableScale}
+                        friction={90} //
+                        tension={100}
+                        activeScale={0.95}
+                        bottomDivider
+                        containerStyle={{
+                          width: 290,
+                          height: 55,
+                        }}
+                        leftAvatar={{
+                          rounded: true,
+                          source: item.image && { uri: item.image },
+                          height: 25,
+                          width: 25,
+                        }}
+                        title={item.name + " (" + item.quantity + ")"}
+                        titleStyle={{
+                          color: darkMode ? colors.white : colors.black,
+                          fontFamily:
+                            Platform.OS === "android"
+                              ? "Roboto"
+                              : "Avenir-Light",
+                          fontSize: 16,
+                        }}
+                        chevron={{ color: "white" }}
+                        rightContainerStyle={{ justifyContent: "center" }}
+                        rightElement={
+                          <Text style={{ color: colors.red, fontSize: 16 }}>
+                            {item.price.toString()}
+                          </Text>
+                        }
+                      />
+                    );
+                  }}
+                  keyExtractor={(item) =>
+                    item.id === undefined ? item.upc : item.id
+                  }
+                />
+              )}
             </View>
           </View>
           <View>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <TouchableScale
+                activeScale={0.75}
+                onPress={() => {
+                  const uri = FileSystem.documentDirectory + filename;
+
+                  Alert.alert(
+                    "Confirm List Upload",
+                    `Would you like to save and upload ${filename} for future use?` +
+                      (selectedItems.length === 0
+                        ? " \n\n(Note: your list is currently empty)"
+                        : ""),
+                    [
+                      {
+                        text: "Cancel",
+                        onPress: () => console.log("Cancelled save"),
+                        style: "cancel",
+                      },
+                      {
+                        text: "Upload",
+                        onPress: () => {
+                          FileSystem.writeAsStringAsync(
+                            uri,
+                            JSON.stringify(selectedItems)
+                          );
+
+                          // Construct a file object from the URI, file name, and MIME type for KML
+                          let file = {
+                            uri: uri,
+                            name: filename,
+                            type: "application/json",
+                          };
+
+                          // Upload the snippet to an S3 bucket with a randomized filename
+                          RNS3.put(file, config).then((res) => {
+                            if (res.status !== 201)
+                              throw new Error("Failed to upload image to S3");
+                            console.log(res);
+                          });
+                        },
+                      },
+                    ],
+                    { cancelable: false }
+                  );
+                }}
+              >
+                <MaterialCommunityIcons
+                  name="content-save-edit-outline"
+                  size={34}
+                  color={colors.red}
+                  style={{ marginTop: 10 }}
+                />
+              </TouchableScale>
+              <TextInput
+                onChangeText={(text) => setFilename(text + ".json")}
+                autoCorrect={false}
+                placeholder={"Enter a list name to save for later"}
+                style={{
+                  height: 30,
+                  borderColor: colors.red,
+                  borderWidth: 1,
+                  borderWidth: 2,
+                  borderRadius: 10,
+                  color: colors.red,
+                  padding: 7,
+                  fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir",
+                  backgroundColor: "white",
+                  width: 250,
+                  marginTop: 10,
+                  marginLeft: 10,
+                }}
+              />
+            </View>
             <Text
               style={{
                 color: darkMode ? colors.white : colors.black,
                 textAlign: "center",
                 marginTop: 10,
-                fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+                fontFamily:
+                  Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+                fontSize: 17,
               }}
             >
               Total Estimated Cost: ${Math.round(calculateCost() * 100) / 100} +
@@ -1434,10 +1465,15 @@ export default function App() {
         footer={
           <DialogFooter>
             <DialogButton
-              style={{ backgroundColor: colors.red }}
+              style={{
+                backgroundColor: "#990000",
+                borderWidth: 1,
+                borderColor: "#ff6666",
+              }}
               textStyle={{
-                color: colors.black,
-                fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+                color: "white",
+                fontFamily:
+                  Platform.OS === "android" ? "Roboto" : "Avenir-Light",
               }}
               text={"Cancel"}
               onPress={() => {
@@ -1550,7 +1586,10 @@ export default function App() {
             <SearchBar
               placeholder="Search for a Product..."
               onChangeText={updateSearch}
-              inputStyle={{ fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light" }}
+              inputStyle={{
+                fontFamily:
+                  Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+              }}
               value={search}
               lightMode={!darkMode}
               containerStyle={{
@@ -1571,10 +1610,15 @@ export default function App() {
               footer={
                 <DialogFooter>
                   <DialogButton
-                    style={{ backgroundColor: colors.red }}
+                    style={{
+                      backgroundColor: "#990000",
+                      borderWidth: 1,
+                      borderColor: "#ff6666",
+                    }}
                     textStyle={{
-                      color: colors.black,
-                      fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+                      color: "white",
+                      fontFamily:
+                        Platform.OS === "android" ? "Roboto" : "Avenir-Light",
                     }}
                     text={"Cancel"}
                     onPress={() => {
@@ -1622,13 +1666,18 @@ export default function App() {
       </Dialog>
       <View style={styles.topContainer}></View>
       <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
-
-        <TouchableScale onPress={() => {
-          setMovingBack(true);
-          swiperRef.current.swipeBack();
-          setIndex((index - 1) % data.length);
-        }}>
-          <MaterialCommunityIcons name="arrow-left-bold-circle-outline" size={34} color={colors.red} />
+        <TouchableScale
+          onPress={() => {
+            setMovingBack(true);
+            swiperRef.current.swipeBack();
+            setIndex((index - 1) % data.length);
+          }}
+        >
+          <MaterialCommunityIcons
+            name="arrow-left-bold-circle-outline"
+            size={34}
+            color={colors.red}
+          />
         </TouchableScale>
         <Text
           style={{
@@ -1640,15 +1689,20 @@ export default function App() {
         >
           {index + 1}/{data.length}
         </Text>
-        <TouchableScale onPress={() => {
-          setMovingBack(false);
-          swiperRef.current.swipeTop();
-        }}>
-          <MaterialCommunityIcons name="arrow-right-bold-circle-outline" size={34} color={colors.red} />
+        <TouchableScale
+          onPress={() => {
+            setMovingBack(false);
+            swiperRef.current.swipeTop();
+          }}
+        >
+          <MaterialCommunityIcons
+            name="arrow-right-bold-circle-outline"
+            size={34}
+            color={colors.red}
+          />
         </TouchableScale>
       </View>
       <View style={styles.swiperContainer}>
-
         <Swiper
           ref={swiperRef}
           cards={data}
@@ -1661,12 +1715,11 @@ export default function App() {
           onSwipedRight={() => {
             setMovingBack(false);
             onSwipedRight();
-
           }}
           onTapCard={onTapCard}
           stackSize={2}
           stackScale={10}
-          useViewOverflow={Platform.OS === 'ios'}
+          useViewOverflow={Platform.OS === "ios"}
           stackSeparation={14}
           disableTopSwipe
           disableBottomSwipe
@@ -1779,7 +1832,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: colors.white,
-    marginTop: -35
+    marginTop: -35,
   },
   text: {
     textAlign: "center",
@@ -1792,7 +1845,10 @@ const styles = StyleSheet.create({
     color: colors.white,
     backgroundColor: "transparent",
   },
-  text: { fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light", fontSize: 33 },
+  text: {
+    fontFamily: Platform.OS === "android" ? "Roboto" : "Avenir-Light",
+    fontSize: 33,
+  },
   heading: { fontSize: 24, marginBottom: 10, color: colors.gray },
   price: { color: colors.purple, fontSize: 32, fontWeight: "500" },
 
