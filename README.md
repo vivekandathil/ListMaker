@@ -38,5 +38,7 @@
 # Save Lists
 - You can now save your grocery lists in the export menu (they are uploaded as a JSON file to an Amazon S3 bucket)
 - When loading the app, you can choose to load one of your saved lists to save time
+
+------------------------
     
   (Product data is taken from various grocery stores in Ottawa)
