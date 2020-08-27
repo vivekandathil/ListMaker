@@ -34,7 +34,9 @@
  - Resets the card deck to the first item
  ### Clear Grocery List
  - Remove all selected items and restart with an empty list
- # Installation
- View/Test the app here: https://expo.io/@/ListMaker
+
+# Save Lists
+- You can now save your grocery lists in the export menu (they are uploaded as a JSON file to an Amazon S3 bucket)
+- When loading the app, you can choose to load one of your saved lists to save time
     
   (Product data is taken from various grocery stores in Ottawa)
